@@ -262,6 +262,43 @@ Again, we arrived at a very simple result: the mean of each class conditional is
 
 #### Estimating $$ \boldsymbol{\Sigma}_k $$
 
+Similarly, we find the optimal $$ \boldsymbol{\Sigma_k} $$ by computing the gradient of the log likelihood w.r.t $$ \boldsymbol{\Sigma_k} $$ and setting it to zero.
+
+$$
+\log \mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma}) \propto
+\sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \log\mathcal{N}(\boldsymbol{x}_i \mid \boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k)) = 
+$$
+
+$$
+\sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \Big( 
+		\underbrace{\log \frac{1}{(2 \pi)^{\frac{D}{2}}}}_{\text{ct. w.r.t } \boldsymbol{\Sigma_k}} + 
+					\log \frac{1}{\det(\boldsymbol{\Sigma_k})^{\frac{1}{2}}} -
+		\frac{1}{2} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)
+		\Big) \propto
+$$
+
+$$
+\sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \Big( 
+					\log \frac{1}{\det(\boldsymbol{\Sigma_k})^{\frac{1}{2}}} -
+		\frac{1}{2} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)
+		\Big) \implies
+$$
+
+<!-- $$
+\nabla_{\boldsymbol{\Sigma_j}}{\log \mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma})} =
+$$
+
+$$
+\sum_{i=1}^N I[y_i = j] \Bigg( 
+					\nabla_{\boldsymbol{\Sigma_j}} \Big( \log \det(\boldsymbol{\Sigma_k^{-1}})^{\frac{1}{2}} \Big) -
+		\nabla_{\boldsymbol{\Sigma_j}} \Big( \frac{1}{2} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_k) \Big)
+		\Bigg)
+$$
+
+For simplicity, we will separately compute the two gradients:
+
+$$ \nabla_{\boldsymbol{\Sigma_j}} \Big( \log \det(\boldsymbol{\Sigma_k^{-1}})^{\frac{1}{2}} \Big) =
+$$ -->
 
 ### Decision boundary
 

@@ -69,8 +69,8 @@
   <meta property="og:type" content="website" />
 
   
-  <meta property="og:url" content="http://localhost:4000/2020-02-15-lda/" />
-  <link rel="canonical" href="http://localhost:4000/2020-02-15-lda/" />
+  <meta property="og:url" content="http://localhost:4000/2020-02-15-generative-classification/" />
+  <link rel="canonical" href="http://localhost:4000/2020-02-15-generative-classification/" />
   
 
   
@@ -396,6 +396,38 @@ p(y = k) = \pi_k, \forall k \in \{1, 2, \dots K\} \tag{5}
 
 <h4 id="estimating-boldsymbolsigma_k">Estimating <script type="math/tex">\boldsymbol{\Sigma}_k</script></h4>
 
+<p>Similarly, we find the optimal <script type="math/tex">\boldsymbol{\Sigma_k}</script> by computing the gradient of the log likelihood w.r.t <script type="math/tex">\boldsymbol{\Sigma_k}</script> and setting it to zero.</p>
+
+<script type="math/tex; mode=display">\log \mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma}) \propto
+\sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \log\mathcal{N}(\boldsymbol{x}_i \mid \boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k)) =</script>
+
+<script type="math/tex; mode=display">\sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \Big( 
+		\underbrace{\log \frac{1}{(2 \pi)^{\frac{D}{2}}}}_{\text{ct. w.r.t } \boldsymbol{\Sigma_k}} + 
+					\log \frac{1}{\det(\boldsymbol{\Sigma_k})^{\frac{1}{2}}} -
+		\frac{1}{2} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)
+		\Big) \propto</script>
+
+<script type="math/tex; mode=display">\sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \Big( 
+					\log \frac{1}{\det(\boldsymbol{\Sigma_k})^{\frac{1}{2}}} -
+		\frac{1}{2} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)
+		\Big) \implies</script>
+
+<!-- $$
+\nabla_{\boldsymbol{\Sigma_j}}{\log \mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma})} =
+$$
+
+$$
+\sum_{i=1}^N I[y_i = j] \Bigg( 
+					\nabla_{\boldsymbol{\Sigma_j}} \Big( \log \det(\boldsymbol{\Sigma_k^{-1}})^{\frac{1}{2}} \Big) -
+		\nabla_{\boldsymbol{\Sigma_j}} \Big( \frac{1}{2} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_k) \Big)
+		\Bigg)
+$$
+
+For simplicity, we will separately compute the two gradients:
+
+$$ \nabla_{\boldsymbol{\Sigma_j}} \Big( \log \det(\boldsymbol{\Sigma_k^{-1}})^{\frac{1}{2}} \Big) =
+$$ -->
+
 <h3 id="decision-boundary">Decision boundary</h3>
 
 <h3 id="code">Code</h3>
@@ -416,7 +448,7 @@ p(y = k) = \pi_k, \forall k \in \{1, 2, \dots K\} \tag{5}
 
   
   <!--- Share on Twitter -->
-    <a href="https://twitter.com/intent/tweet?text=Generative+methods+for+classification&url=http%3A%2F%2Flocalhost%3A4000%2F2020-02-15-lda%2F"
+    <a href="https://twitter.com/intent/tweet?text=Generative+methods+for+classification&url=http%3A%2F%2Flocalhost%3A4000%2F2020-02-15-generative-classification%2F"
       class="btn btn-social-icon btn-twitter" title="Share on Twitter">
       <span class="fa fa-fw fa-twitter" aria-hidden="true"></span>
       <span class="sr-only">Twitter</span>
@@ -425,7 +457,7 @@ p(y = k) = \pi_k, \forall k \in \{1, 2, \dots K\} \tag{5}
 
   
   <!--- Share on Facebook -->
-    <a href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Flocalhost%3A4000%2F2020-02-15-lda%2F"
+    <a href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Flocalhost%3A4000%2F2020-02-15-generative-classification%2F"
       class="btn btn-social-icon btn-facebook" title="Share on Facebook">
       <span class="fa fa-fw fa-facebook" aria-hidden="true"></span>
       <span class="sr-only">Facebook</span>
@@ -434,7 +466,7 @@ p(y = k) = \pi_k, \forall k \in \{1, 2, \dots K\} \tag{5}
 
   
   <!--- Share on LinkedIn -->
-    <a href="https://www.linkedin.com/shareArticle?mini=true&url=http%3A%2F%2Flocalhost%3A4000%2F2020-02-15-lda%2F"
+    <a href="https://www.linkedin.com/shareArticle?mini=true&url=http%3A%2F%2Flocalhost%3A4000%2F2020-02-15-generative-classification%2F"
       class="btn btn-social-icon btn-linkedin" title="Share on LinkedIn">
       <span class="fa fa-fw fa-linkedin" aria-hidden="true"></span>
       <span class="sr-only">LinkedIn</span>
