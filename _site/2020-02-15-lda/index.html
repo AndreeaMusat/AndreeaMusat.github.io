@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+  <!-- Beautiful Jekyll | MIT license | Copyright Dean Attali 2016 -->
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+
+  <title>Generative methods for classification</title>
+
+  <meta name="author" content="Andreea Mușat" />
+
+  
+
+  <link rel="alternate" type="application/rss+xml" title="Website Title - No description." href="http://localhost:4000/feed.xml" />
+
+  
+
+  
+
+  
+
+
+  
+    
+      
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
+
+
+    
+  
+
+  
+    
+      <link rel="stylesheet" href="/css/bootstrap.min.css" />
+    
+      <link rel="stylesheet" href="/css/bootstrap-social.css" />
+    
+      <link rel="stylesheet" href="/css/main.css" />
+    
+  
+
+  
+    
+      <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" />
+    
+      <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" />
+    
+  
+
+  
+
+  
+
+  
+
+    <!-- Facebook OpenGraph tags -->
+  
+
+  
+  <meta property="og:title" content="Generative methods for classification" />
+  
+
+   
+  <meta property="og:description" content="Prerequisites Basic calculus (logarithm rules, taking derivatives) Basic probability and bayesian statistics notions (prior, posterior, Bayes’ rule, joint probability, independence, Gaussian distribution, categorical distribution, most of them can be found here) Optimization concepts (convex and concave functions, finding extrema points, method of Lagrange multipliers) Probabilistic framework for generative classification Classification...">
+  
+
+
+  <meta property="og:type" content="website" />
+
+  
+  <meta property="og:url" content="http://localhost:4000/2020-02-15-lda/" />
+  <link rel="canonical" href="http://localhost:4000/2020-02-15-lda/" />
+  
+
+  
+  <meta property="og:image" content="http://localhost:4000/img/avatar-icon.png" />
+  
+
+
+  <!-- Twitter summary cards -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:site" content="@" />
+  <meta name="twitter:creator" content="@" />
+
+  
+  <meta name="twitter:title" content="Generative methods for classification" />
+  
+
+  
+  <meta name="twitter:description" content="Prerequisites Basic calculus (logarithm rules, taking derivatives) Basic probability and bayesian statistics notions (prior, posterior, Bayes’ rule, joint probability, independence, Gaussian distribution, categorical distribution, most of them can be found here) Optimization concepts (convex and concave functions, finding extrema points, method of Lagrange multipliers) Probabilistic framework for generative classification Classification...">
+  
+
+  
+  <meta name="twitter:image" content="http://localhost:4000/img/avatar-icon.png" />
+  
+
+  
+
+  
+
+</head>
+
+
+  <body>
+
+    
+
+  
+    <nav class="navbar navbar-default navbar-fixed-top navbar-custom">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#main-navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button><a class="navbar-brand" href="http://localhost:4000/">Website Title</a></div>
+
+    <div class="collapse navbar-collapse" id="main-navbar">
+      <ul class="nav navbar-nav navbar-right">
+          <li><a href="/aboutme">About Me</a></li></ul>
+    </div>
+
+	
+	<div class="avatar-container">
+	  <div class="avatar-img-border">
+	    <a href="http://localhost:4000/">
+	      <img class="avatar-img" src="/img/avatar-icon.png" />
+		</a>
+	  </div>
+	</div>
+	
+
+  </div>
+</nav>
+
+
+    
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+<script
+  type="text/javascript"
+  charset="utf-8"
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+>
+</script>
+<script
+  type="text/javascript"
+  charset="utf-8"
+  src="https://vincenttam.github.io/javascripts/MathJaxLocal.js"
+>
+</script>
+
+<!-- TODO this file has become a mess, refactor it -->
+
+
+
+
+
+<header class="header-section ">
+
+<div class="intro-header no-img">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-heading">
+          <h1>Generative methods for classification</h1>
+		  
+		  
+		  
+		  <span class="post-meta">Posted on February 15, 2020</span>
+		  
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</header>
+
+
+
+
+
+<div class="container">
+  <div class="row">
+    <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+      
+      
+
+      <article role="main" class="blog-post">
+        <h4 id="prerequisites">Prerequisites</h4>
+
+<ul>
+  <li>Basic calculus (logarithm rules, taking derivatives)</li>
+  <li>Basic probability and bayesian statistics notions (prior, posterior, Bayes’ rule, joint probability, independence, Gaussian distribution, categorical distribution, most of them can be found <a href="https://www.cs.princeton.edu/~bee/courses/scribe/lec_08_26_2013.pdf">here</a>)</li>
+  <li>Optimization concepts (convex and concave functions, finding extrema points, method of Lagrange multipliers)</li>
+</ul>
+
+<h3 id="probabilistic-framework-for-generative-classification">Probabilistic framework for generative classification</h3>
+
+<p>Classification is the problem of assigning a discrete label (class) to a data point. Unlike discriminant methods, where the class is assigned directly, without any measure of uncertainty, a generative approach models the joint probability of the data:</p>
+
+<p>\begin{equation}
+\overbrace{p(\boldsymbol{x}, y)}^{\text{joint}} = 
+\underbrace{p(y)}_{\text{class prior}} \overbrace{p(\boldsymbol{x}\mid y)}^{\text{class conditional}} \tag{1}
+\end{equation}</p>
+
+<p>where <script type="math/tex">\boldsymbol{x} \in \mathbb{R}^D</script> (note the usage of bold symbols for vectors) is a point to be classified and <script type="math/tex">y \in \{1, 2, \dots K \}</script> is its label, with <script type="math/tex">K</script> being the total number of classes.</p>
+
+<p>Intuitively, the prior represents how often a class is expected to appear and the class conditional is the probability density function (assuming <script type="math/tex">X</script> are continous) of the data having the class indicated by y.</p>
+
+<p>Using this framework, the posterior probability of each class <script type="math/tex">k</script> for a new point <script type="math/tex">\boldsymbol{x}_{new}</script> is given by Bayes’ rule:</p>
+
+<script type="math/tex; mode=display">\begin{equation}
+p(y = k \mid \boldsymbol{x}_{new}) = 
+\frac{p(\boldsymbol{x}_{new} \mid y = k) p(y = k)}{p(\boldsymbol{x}_{new})} \propto 
+p(\boldsymbol{x}_{new} \mid y = k) p(y = k) \tag{2}
+\end{equation}</script>
+
+<p>where we used the fact that <script type="math/tex">p(\boldsymbol{x}_{new})</script> is just a scaling factor that appears in all posterior probabilities and thus can be ignored.</p>
+
+<p>Now, <script type="math/tex">\boldsymbol{x}_{new}</script> will be assigned to the class which yields the highest posterior probability:</p>
+
+<script type="math/tex; mode=display">\begin{equation}
+y_{new} = \arg\max_{k} p(y = k \mid \boldsymbol{x}_{new}) \tag{3}
+\end{equation}</script>
+
+<h3 id="normally-distributed-inputs">Normally distributed inputs</h3>
+
+<p>Up to this point, we have only established the probabilistic framework we will use, but we haven’t made any assumption about the distribution of the data within each class. We will continue by making some assumptions about the underlying distributions of the data and then estimating the parameters of these distributions.</p>
+
+<h4 id="modelling-the-class-priors-and-class-conditionals">Modelling the class priors and class conditionals</h4>
+
+<p>We will assume that the class conditionals are <a href="https://en.wikipedia.org/wiki/Multivariate_normal_distribution">multivariate Gaussian distributions</a>:</p>
+
+<script type="math/tex; mode=display">\begin{equation}
+p(\boldsymbol{x} \mid y = k) = 
+\mathcal{N}(\boldsymbol{x} \mid \boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k) = 
+\frac{1}{(2 \pi)^{\frac{D}{2}}} \frac{1}{\det({\boldsymbol{\Sigma}_k})^{\frac{1}{2}}} e^{-\frac{1}{2} (\boldsymbol{x} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x} - \boldsymbol{\mu}_k)} \tag{4}
+\end{equation}</script>
+
+<p>Because there are <script type="math/tex">K</script> classes and their probabilities sum to one, the natural choice for the class priors is a <a href="https://en.wikipedia.org/wiki/Categorical_distribution">categorical distribution</a> with parameters <script type="math/tex">\boldsymbol{\pi} = \begin{bmatrix} \pi_1, \pi_2, \dots, \pi_K \end{bmatrix}</script>:</p>
+
+<script type="math/tex; mode=display">\begin{equation}
+p(y = k) = \pi_k, \forall k \in \{1, 2, \dots K\} \tag{5}
+\end{equation}</script>
+
+<h3 id="maximum-likelihood-estimation-mle-of-the-parameters">Maximum Likelihood Estimation (MLE) of the parameters</h3>
+
+<p>Before moving on, let’s recap what we have until now: we modeled the class priors using a categorical distribution with parameters <script type="math/tex">\boldsymbol{\pi}</script> and the class conditionals using Gaussian distributions with means <script type="math/tex">\boldsymbol{\mu}_k</script> and covariance matrices <script type="math/tex">\boldsymbol{\Sigma}_k, \forall k \in \{1, 2, \dots k \}</script>. However, the parameters of these distributions are not known, so we must use the dataset in order to estimate them.</p>
+
+<h4 id="maximum-likelihood-estimation-mle-refresher">Maximum Likelihood Estimation (MLE) refresher</h4>
+
+<p>MLE is a method for estimating the parameters <script type="math/tex">\boldsymbol{\theta}</script> of a probability distribution <script type="math/tex">p(\boldsymbol{x} \mid \boldsymbol{\theta})</script> by maximizing the likelihood function of a dataset <script type="math/tex">\mathcal{D} = \{\boldsymbol{x}_1, \dots, \boldsymbol{x}_n\}</script> consisting of <script type="math/tex">n</script> i.i.d samples:</p>
+
+<script type="math/tex; mode=display">\begin{equation}
+\boldsymbol{\hat{\theta}} = 
+\arg\max_{\boldsymbol{\theta}} \underbrace{\mathcal{L}( \mathcal{D} \mid \boldsymbol{\theta})}_{\text{likelihood}} =
+\arg\max_{\boldsymbol{\theta}} \underbrace{\prod_{i=1}^N p(\boldsymbol{x}_i \mid \boldsymbol{\theta})}_{\text{likelihood}} \tag{6}
+\end{equation}</script>
+
+<p>Because it is inconvenient to maximize a function containing a product, we can make use of the fact that the logarithm function transforms products into sums and is non-decreasing, thus preserving the extrema of a function:</p>
+
+<script type="math/tex; mode=display">\begin{equation}
+\boldsymbol{\hat{\theta}} =
+\arg\max_{\boldsymbol{\theta}} \underbrace{\log \big( \prod_{i=1}^N p(\boldsymbol{x}_i \mid \boldsymbol{\theta}) \big)}_{\text{log likelihood}} = 
+\arg\max_{\boldsymbol{\theta}} \underbrace{\sum_{i=1}^N \log p(\boldsymbol{x}_i \mid \boldsymbol{\theta})}_{\text{log likelihood}}  \tag{7}
+\end{equation}</script>
+
+<p>Usually, when <script type="math/tex">\boldsymbol{\theta}</script> is unconstrained, the maximizer of the log likelihood function is found by setting the derivative w.r.t <script type="math/tex">\boldsymbol{\theta}</script> (or gradient if working with a multidimensional parameter) to zero and proving that the maximized function is concave, which is sufficient to conclude that extrema point found is indeed a maximizer. If <script type="math/tex">\boldsymbol{\theta}</script> is constrained, then a different method such as the method of Lagrange multipliers should be used.</p>
+
+<h4 id="modeling-the-joint-distribution-of-a-sample">Modeling the joint distribution of a sample</h4>
+
+<p>Using the class priors and class conditionals assumed above, the joint distribution of an input and its corresponding label can be written as:</p>
+
+<script type="math/tex; mode=display">p(\boldsymbol{x}, y = k) = p(y = k) p(\boldsymbol{x} \mid y = k) = 
+\pi_k \mathcal{N}(\boldsymbol{x} \mid \boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k) =</script>
+
+<script type="math/tex; mode=display">\begin{equation}
+\prod_{i=1}^K (\pi_i \mathcal{N}(\boldsymbol{x} \mid \boldsymbol{\mu}_i, \boldsymbol{\Sigma}_i))^{I[y = i]} \tag{8}
+\end{equation}</script>
+
+<p>where <script type="math/tex">I[\text{condition}]</script> is the indicator function (see <a href="https://en.wikipedia.org/wiki/Iverson_bracket">Iverson bracket</a>) which evaluates to 1 only if the condition inside the brackets is true.</p>
+
+<h4 id="log-likelihood-of-the-dataset">Log likelihood of the dataset</h4>
+
+<p>Assuming we have a dataset consisting of N <a href="https://en.wikipedia.org/wiki/Independent_and_identically_distributed_random_variables">independent and identically distributed</a> samples, <script type="math/tex">\mathcal{D} = \{(\boldsymbol{x}_i, y_i)_{i=1}^N\}</script>, we can write the likelihood of the data as the product of the probabilities of all samples:</p>
+
+<script type="math/tex; mode=display">\begin{equation}
+\mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma}) = 
+\prod_{i=1}^N \prod_{k=1}^K (\pi_k \mathcal{N}(\boldsymbol{x}_i \mid \boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k))^{I[y_i = k]} \tag{9}
+\end{equation}</script>
+
+<p>Thus, the log likelihood of the dataset will be:</p>
+
+<script type="math/tex; mode=display">\log \mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma}) = 
+\sum_{i=1}^N \sum_{k=1}^K \log(\pi_k \mathcal{N}(\boldsymbol{x}_i \mid \boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k))^{I[y_i = k]} =</script>
+
+<script type="math/tex; mode=display">\begin{equation}
+\sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \big( \log\pi_k + \log\mathcal{N}(\boldsymbol{x}_i \mid \boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k)) \big) \tag{10}
+\end{equation}</script>
+
+<h4 id="estimating-boldsymbolpi_k">Estimating <script type="math/tex">\boldsymbol{\pi}_k</script></h4>
+
+<p>We first notice that <script type="math/tex">\pi_k</script> appears in the log likelihood only through the term <script type="math/tex">\log \pi_k</script>, so we can ignore the other term which doesn’t depend on it:</p>
+
+<script type="math/tex; mode=display">\begin{equation}
+\log \mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma}) \propto 
+\sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \log\pi_k \tag{11}
+\end{equation}</script>
+
+<p>Because the <script type="math/tex">\pi_k</script>’s are constrained such that <script type="math/tex">\sum_{k=1}^K \pi_k = 1</script> (as they are the parameters of a categorical distribution), we can use the method of Lagrange multipliers to find the maximizer of the log likelihood subject to this constraint.</p>
+
+<p>We formulate the Lagrangian:</p>
+
+<script type="math/tex; mode=display">\begin{equation}
+\mathcal{L}(\boldsymbol{\pi}, \lambda) = 
+\sum_{i=1}^N \sum_{k=1}^K \Big( I[y_i = k] \log\pi_k \Big) - \lambda (\sum_{k=1}^K \pi_k - 1) \tag{12}
+\end{equation}</script>
+
+<p>which we can reorder a bit and unclutter by noticing that the interior sum <script type="math/tex">\sum_{i=1}^N  I[y_i = k]</script> is just the number of data points which have class <script type="math/tex">k</script>, which we can denote as <script type="math/tex">N_k</script>:</p>
+
+<script type="math/tex; mode=display">\mathcal{L}(\boldsymbol{\pi}, \lambda) = 
+\sum_{k=1}^K \log\pi_k \underbrace{\sum_{i=1}^N  I[y_i = k]}_{N_k} - \lambda (\sum_{k=1}^K \pi_k - 1) =</script>
+
+<script type="math/tex; mode=display">\begin{equation}
+\sum_{k=1}^K N_k \log\pi_k  - \lambda (\sum_{k=1}^K \pi_k - 1) \tag{13}
+\end{equation}</script>
+
+<p>Taking the derivative of the Lagrangian w.r.t <script type="math/tex">\pi_j</script> and setting it to zero, we obtain:</p>
+
+<script type="math/tex; mode=display">\begin{equation}
+\frac{\partial{\mathcal{L}(\boldsymbol{\pi}, \lambda)}}{\partial{\pi_j}} = 
+\frac{N_j}{\pi_j} - \lambda \overset{!}{=} 0 \implies \pi_j = \frac{N_j}{\lambda} \tag{14}
+\end{equation}</script>
+
+<p>Replacing <script type="math/tex">\pi_j</script> back into the Lagrangian we obtain the dual:</p>
+
+<script type="math/tex; mode=display">g(\lambda) = 
+\sum_{k=1}^K N_k log\frac{N_k}{\lambda} - \lambda (\sum_{k=1}^K \frac{N_k}{\lambda} - 1) =
+\sum_{k=1}^K N_k log\frac{N_k}{\lambda} + \lambda - \sum_{k=1}^K N_k \implies</script>
+
+<script type="math/tex; mode=display">\frac{d g(\lambda)}{d \lambda} = 
+\sum_{k=1}^K N_k \frac{\lambda}{N_k} \Big[ \frac{d}{d \lambda} \frac{N_k}{\lambda} \Big] + 1 = 
+\sum_{k=1}^K \frac{-N_k}{\lambda} + 1 \overset{!}{=} 0 \implies</script>
+
+<script type="math/tex; mode=display">\begin{equation}
+\frac{1}{\lambda} \sum_{k=1}^K N_k = 1 \tag{15}
+\end{equation}</script>
+
+<p>We remember that <script type="math/tex">N_k</script> was the number of elements in the dataset belonging to class <script type="math/tex">k</script>, so naturally the sum of all <script type="math/tex">N_k</script>’s will be <script type="math/tex">N</script>, the total number of elements in the dataset. Thus, we can conclude that:</p>
+
+<script type="math/tex; mode=display">\begin{equation} 
+\lambda = N \implies \pi_j = \frac{N_j}{N}  \tag{16}
+\end{equation}</script>
+
+<p>So we arrived at a simple result stating that the estimated probability for each class must be the empirical probability of that class, measured on dataset <script type="math/tex">\mathcal{D}</script>.</p>
+
+<h4 id="estimating-boldsymbolmu_k">Estimating <script type="math/tex">\boldsymbol{\mu}_k</script></h4>
+
+<p>Now, we look at the log likelihood again [10] and only keep the terms containing <script type="math/tex">\boldsymbol{\mu}_k</script>:</p>
+
+<script type="math/tex; mode=display">\log \mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma}) \propto
+\sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \log\mathcal{N}(\boldsymbol{x}_i \mid \boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k)) =</script>
+
+<script type="math/tex; mode=display">\sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \Big( 
+		\underbrace{\log \frac{1}{(2 \pi)^{\frac{D}{2}}} + 
+					\log \frac{1}{\det(\boldsymbol{\Sigma_k})^{\frac{1}{2}}}}_{\text{ct. w.r.t } \boldsymbol{\mu_k}} -
+		\frac{1}{2} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)
+		\Big) \propto</script>
+
+<script type="math/tex; mode=display">\sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \Big( 
+-\frac{1}{2} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)
+		\Big) \implies</script>
+
+<script type="math/tex; mode=display">\nabla_{\boldsymbol{\mu_j}}{\log \mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma})} =
+\sum_{i=1}^N I[y_i = j]  \Big( -\frac{1}{2} 2 \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_j)
+\Big) \overset{!}{=} 0 \implies</script>
+
+<script type="math/tex; mode=display">\sum_{i=1}^N I[y_i = j]  (\boldsymbol{x_i} - \boldsymbol{\mu}_j) = 0 \implies
+\sum_{i=1}^N I[y_i = j] \boldsymbol{x_i} = \boldsymbol{\mu_j} \underbrace{\sum_{i=1}^N I[y_i = j]}_{N_j} \implies</script>
+
+<script type="math/tex; mode=display">\begin{equation}
+\boldsymbol{\mu_j} = \frac{1}{N_j} \sum_{i=1}^N I[y_i = j] \boldsymbol{x_i}
+\tag{17}
+\end{equation}</script>
+
+<p>Again, we arrived at a very simple result: the mean of each class conditional is the empirical mean of all data points belonging to that class.</p>
+
+<h4 id="estimating-boldsymbolsigma_k">Estimating <script type="math/tex">\boldsymbol{\Sigma}_k</script></h4>
+
+<h3 id="decision-boundary">Decision boundary</h3>
+
+<h3 id="code">Code</h3>
+
+
+      </article>
+
+      
+
+      
+        <!-- Check if any share-links are active -->
+
+
+
+
+<section id = "social-share-section">
+  <span class="sr-only">Share: </span>
+
+  
+  <!--- Share on Twitter -->
+    <a href="https://twitter.com/intent/tweet?text=Generative+methods+for+classification&url=http%3A%2F%2Flocalhost%3A4000%2F2020-02-15-lda%2F"
+      class="btn btn-social-icon btn-twitter" title="Share on Twitter">
+      <span class="fa fa-fw fa-twitter" aria-hidden="true"></span>
+      <span class="sr-only">Twitter</span>
+    </a>
+  
+
+  
+  <!--- Share on Facebook -->
+    <a href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Flocalhost%3A4000%2F2020-02-15-lda%2F"
+      class="btn btn-social-icon btn-facebook" title="Share on Facebook">
+      <span class="fa fa-fw fa-facebook" aria-hidden="true"></span>
+      <span class="sr-only">Facebook</span>
+    </a>
+  
+
+  
+  <!--- Share on LinkedIn -->
+    <a href="https://www.linkedin.com/shareArticle?mini=true&url=http%3A%2F%2Flocalhost%3A4000%2F2020-02-15-lda%2F"
+      class="btn btn-social-icon btn-linkedin" title="Share on LinkedIn">
+      <span class="fa fa-fw fa-linkedin" aria-hidden="true"></span>
+      <span class="sr-only">LinkedIn</span>
+    </a>
+  
+
+</section>
+
+
+
+      
+
+      <ul class="pager blog-pager">
+        
+        
+      </ul>
+
+      
+        <div class="disqus-comments">
+          
+        </div>
+          
+        <div class="staticman-comments">
+          
+
+        </div>
+        <div class="justcomments-comments">
+          
+        </div>
+      
+    </div>
+  </div>
+</div>
+
+
+    <footer>
+  <div class="container beautiful-jekyll-footer">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <ul class="list-inline text-center footer-links"><li><a href="mailto:andreea.a.musat@gmail.com" title="Email me"><span class="fa-stack fa-lg" aria-hidden="true">
+                  <i class="fa fa-circle fa-stack-2x"></i>
+                  <i class="fa fa-envelope fa-stack-1x fa-inverse"></i>
+                </span>
+                <span class="sr-only">Email me</span>
+              </a>
+            </li><li><a href="https://github.com/andreeaAM" title="GitHub"><span class="fa-stack fa-lg" aria-hidden="true">
+                  <i class="fa fa-circle fa-stack-2x"></i>
+                  <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                </span>
+                <span class="sr-only">GitHub</span>
+              </a>
+            </li><li><a href="https://linkedin.com/in/andreea-alexandra-muşat-74530111b" title="LinkedIn"><span class="fa-stack fa-lg" aria-hidden="true">
+                  <i class="fa fa-circle fa-stack-2x"></i>
+                  <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+                </span>
+                <span class="sr-only">LinkedIn</span>
+              </a>
+            </li></ul>
+      <p class="copyright text-muted">
+      Andreea Mușat
+      &nbsp;&bull;&nbsp;
+      2020
+
+      
+      &nbsp;&bull;&nbsp;
+      <a href="http://localhost:4000/">andreeamusat.github.io</a>
+      
+
+      
+      </p>
+          <!-- Please don't remove this, keep my open source work credited :) -->
+    <p class="theme-by text-muted">
+      Theme by
+      <a href="https://deanattali.com/beautiful-jekyll/">beautiful-jekyll</a>
+    </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+  
+    
+
+
+  
+    <!-- doing something a bit funky here because I want to be careful not to include JQuery twice! -->
+    
+      <script>
+      	if (typeof jQuery == 'undefined') {
+          document.write('<script src="/js/jquery-1.11.2.min.js"></scr' + 'ipt>');
+      	}
+      </script>
+    
+  
+    <!-- doing something a bit funky here because I want to be careful not to include JQuery twice! -->
+    
+      <script src="/js/bootstrap.min.js"></script>
+    
+  
+    <!-- doing something a bit funky here because I want to be careful not to include JQuery twice! -->
+    
+      <script src="/js/main.js"></script>
+    
+  
+
+
+
+
+
+
+  
+  </body>
+</html>

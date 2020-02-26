@@ -1,0 +1,271 @@
+---
+layout: post
+title:  "Generative methods for classification"
+date:   2020-02-15 11:45:48 +0100
+categories: ml
+mathjax: true
+---
+
+#### Prerequisites
+
++ Basic calculus (logarithm rules, taking derivatives)
++ Basic probability and bayesian statistics notions (prior, posterior, Bayes' rule, joint probability, independence, Gaussian distribution, categorical distribution, most of them can be found [here](https://www.cs.princeton.edu/~bee/courses/scribe/lec_08_26_2013.pdf))
++ Optimization concepts (convex and concave functions, finding extrema points, method of Lagrange multipliers)
+
+### Probabilistic framework for generative classification
+
+Classification is the problem of assigning a discrete label (class) to a data point. Unlike discriminant methods, where the class is assigned directly, without any measure of uncertainty, a generative approach models the joint probability of the data: 
+
+
+\begin{equation}
+\overbrace{p(\boldsymbol{x}, y)}^{\text{joint}} = 
+\underbrace{p(y)}_{\text{class prior}} \overbrace{p(\boldsymbol{x}\mid y)}^{\text{class conditional}} \tag{1}
+\end{equation}
+
+
+where $$ \boldsymbol{x} \in \mathbb{R}^D $$ (note the usage of bold symbols for vectors) is a point to be classified and $$ y \in \{1, 2, \dots K \} $$ is its label, with $$ K $$ being the total number of classes.
+
+Intuitively, the prior represents how often a class is expected to appear and the class conditional is the probability density function (assuming $$ X $$ are continous) of the data having the class indicated by y.
+
+Using this framework, the posterior probability of each class $$ k $$ for a new point $$ \boldsymbol{x}_{new} $$ is given by Bayes' rule:
+
+$$ 
+\begin{equation}
+p(y = k \mid \boldsymbol{x}_{new}) = 
+\frac{p(\boldsymbol{x}_{new} \mid y = k) p(y = k)}{p(\boldsymbol{x}_{new})} \propto 
+p(\boldsymbol{x}_{new} \mid y = k) p(y = k) \tag{2}
+\end{equation}
+$$
+
+where we used the fact that $$ p(\boldsymbol{x}_{new}) $$ is just a scaling factor that appears in all posterior probabilities and thus can be ignored.
+
+Now, $$ \boldsymbol{x}_{new} $$ will be assigned to the class which yields the highest posterior probability:
+
+$$ 
+\begin{equation}
+y_{new} = \arg\max_{k} p(y = k \mid \boldsymbol{x}_{new}) \tag{3}
+\end{equation}
+$$
+
+
+### Normally distributed inputs
+
+Up to this point, we have only established the probabilistic framework we will use, but we haven't made any assumption about the distribution of the data within each class. We will continue by making some assumptions about the underlying distributions of the data and then estimating the parameters of these distributions.
+
+#### Modelling the class priors and class conditionals
+
+We will assume that the class conditionals are [multivariate Gaussian distributions](https://en.wikipedia.org/wiki/Multivariate_normal_distribution):
+
+$$ 
+\begin{equation}
+p(\boldsymbol{x} \mid y = k) = 
+\mathcal{N}(\boldsymbol{x} \mid \boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k) = 
+\frac{1}{(2 \pi)^{\frac{D}{2}}} \frac{1}{\det({\boldsymbol{\Sigma}_k})^{\frac{1}{2}}} e^{-\frac{1}{2} (\boldsymbol{x} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x} - \boldsymbol{\mu}_k)} \tag{4}
+\end{equation}
+$$
+
+Because there are $$ K $$ classes and their probabilities sum to one, the natural choice for the class priors is a [categorical distribution](https://en.wikipedia.org/wiki/Categorical_distribution) with parameters $$ \boldsymbol{\pi} = \begin{bmatrix} \pi_1, \pi_2, \dots, \pi_K \end{bmatrix} $$:
+
+$$ 
+\begin{equation}
+p(y = k) = \pi_k, \forall k \in \{1, 2, \dots K\} \tag{5}
+\end{equation}
+$$
+
+### Maximum Likelihood Estimation (MLE) of the parameters
+
+Before moving on, let's recap what we have until now: we modeled the class priors using a categorical distribution with parameters $$ \boldsymbol{\pi} $$ and the class conditionals using Gaussian distributions with means $$ \boldsymbol{\mu}_k $$ and covariance matrices $$ \boldsymbol{\Sigma}_k, \forall k \in \{1, 2, \dots k \} $$. However, the parameters of these distributions are not known, so we must use the dataset in order to estimate them.
+
+
+#### Maximum Likelihood Estimation (MLE) refresher 
+
+MLE is a method for estimating the parameters $$ \boldsymbol{\theta} $$ of a probability distribution $$ p(\boldsymbol{x} \mid \boldsymbol{\theta}) $$ by maximizing the likelihood function of a dataset $$ \mathcal{D} = \{\boldsymbol{x}_1, \dots, \boldsymbol{x}_n\} $$ consisting of $$ n $$ i.i.d samples:
+
+
+$$ 
+\begin{equation}
+\boldsymbol{\hat{\theta}} = 
+\arg\max_{\boldsymbol{\theta}} \underbrace{\mathcal{L}( \mathcal{D} \mid \boldsymbol{\theta})}_{\text{likelihood}} =
+\arg\max_{\boldsymbol{\theta}} \underbrace{\prod_{i=1}^N p(\boldsymbol{x}_i \mid \boldsymbol{\theta})}_{\text{likelihood}} \tag{6}
+\end{equation}
+$$
+
+Because it is inconvenient to maximize a function containing a product, we can make use of the fact that the logarithm function transforms products into sums and is non-decreasing, thus preserving the extrema of a function:
+
+$$ 
+\begin{equation}
+\boldsymbol{\hat{\theta}} =
+\arg\max_{\boldsymbol{\theta}} \underbrace{\log \big( \prod_{i=1}^N p(\boldsymbol{x}_i \mid \boldsymbol{\theta}) \big)}_{\text{log likelihood}} = 
+\arg\max_{\boldsymbol{\theta}} \underbrace{\sum_{i=1}^N \log p(\boldsymbol{x}_i \mid \boldsymbol{\theta})}_{\text{log likelihood}}  \tag{7}
+\end{equation}
+$$
+
+Usually, when $$ \boldsymbol{\theta} $$ is unconstrained, the maximizer of the log likelihood function is found by setting the derivative w.r.t $$ \boldsymbol{\theta} $$ (or gradient if working with a multidimensional parameter) to zero and proving that the maximized function is concave, which is sufficient to conclude that extrema point found is indeed a maximizer. If $$ \boldsymbol{\theta} $$ is constrained, then a different method such as the method of Lagrange multipliers should be used.
+
+#### Modeling the joint distribution of a sample
+
+Using the class priors and class conditionals assumed above, the joint distribution of an input and its corresponding label can be written as:
+
+$$ 
+p(\boldsymbol{x}, y = k) = p(y = k) p(\boldsymbol{x} \mid y = k) = 
+\pi_k \mathcal{N}(\boldsymbol{x} \mid \boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k) = 
+$$
+
+$$
+\begin{equation}
+\prod_{i=1}^K (\pi_i \mathcal{N}(\boldsymbol{x} \mid \boldsymbol{\mu}_i, \boldsymbol{\Sigma}_i))^{I[y = i]} \tag{8}
+\end{equation}
+$$
+
+where $$ I[\text{condition}] $$ is the indicator function (see [Iverson bracket](https://en.wikipedia.org/wiki/Iverson_bracket)) which evaluates to 1 only if the condition inside the brackets is true.
+
+#### Log likelihood of the dataset
+
+Assuming we have a dataset consisting of N [independent and identically distributed](https://en.wikipedia.org/wiki/Independent_and_identically_distributed_random_variables) samples, $$ \mathcal{D} = \{(\boldsymbol{x}_i, y_i)_{i=1}^N\}$$, we can write the likelihood of the data as the product of the probabilities of all samples:
+
+$$ 
+\begin{equation}
+\mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma}) = 
+\prod_{i=1}^N \prod_{k=1}^K (\pi_k \mathcal{N}(\boldsymbol{x}_i \mid \boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k))^{I[y_i = k]} \tag{9}
+\end{equation}
+$$
+
+Thus, the log likelihood of the dataset will be:
+
+$$ 
+\log \mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma}) = 
+\sum_{i=1}^N \sum_{k=1}^K \log(\pi_k \mathcal{N}(\boldsymbol{x}_i \mid \boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k))^{I[y_i = k]} =
+$$
+
+$$	
+\begin{equation}
+\sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \big( \log\pi_k + \log\mathcal{N}(\boldsymbol{x}_i \mid \boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k)) \big) \tag{10}
+\end{equation}
+$$
+
+#### Estimating $$ \boldsymbol{\pi}_k $$
+
+We first notice that $$ \pi_k $$ appears in the log likelihood only through the term $$ \log \pi_k $$, so we can ignore the other term which doesn't depend on it:
+
+$$ 
+\begin{equation}
+\log \mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma}) \propto 
+\sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \log\pi_k \tag{11}
+\end{equation}
+$$
+
+Because the $$ \pi_k $$'s are constrained such that $$ \sum_{k=1}^K \pi_k = 1 $$ (as they are the parameters of a categorical distribution), we can use the method of Lagrange multipliers to find the maximizer of the log likelihood subject to this constraint.
+
+We formulate the Lagrangian:
+
+$$
+\begin{equation}
+\mathcal{L}(\boldsymbol{\pi}, \lambda) = 
+\sum_{i=1}^N \sum_{k=1}^K \Big( I[y_i = k] \log\pi_k \Big) - \lambda (\sum_{k=1}^K \pi_k - 1) \tag{12}
+\end{equation}
+$$
+
+which we can reorder a bit and unclutter by noticing that the interior sum $$ \sum_{i=1}^N  I[y_i = k] $$ is just the number of data points which have class $$ k $$, which we can denote as $$ N_k $$:
+
+$$ 
+\mathcal{L}(\boldsymbol{\pi}, \lambda) = 
+\sum_{k=1}^K \log\pi_k \underbrace{\sum_{i=1}^N  I[y_i = k]}_{N_k} - \lambda (\sum_{k=1}^K \pi_k - 1) = 
+$$
+
+$$
+\begin{equation}
+\sum_{k=1}^K N_k \log\pi_k  - \lambda (\sum_{k=1}^K \pi_k - 1) \tag{13}
+\end{equation}
+$$
+
+Taking the derivative of the Lagrangian w.r.t $$ \pi_j$$ and setting it to zero, we obtain:
+
+$$ 
+\begin{equation}
+\frac{\partial{\mathcal{L}(\boldsymbol{\pi}, \lambda)}}{\partial{\pi_j}} = 
+\frac{N_j}{\pi_j} - \lambda \overset{!}{=} 0 \implies \pi_j = \frac{N_j}{\lambda} \tag{14}
+\end{equation}
+$$
+
+Replacing $$ \pi_j $$ back into the Lagrangian we obtain the dual:
+
+$$ 
+g(\lambda) = 
+\sum_{k=1}^K N_k log\frac{N_k}{\lambda} - \lambda (\sum_{k=1}^K \frac{N_k}{\lambda} - 1) =
+\sum_{k=1}^K N_k log\frac{N_k}{\lambda} + \lambda - \sum_{k=1}^K N_k \implies
+$$
+
+$$
+\frac{d g(\lambda)}{d \lambda} = 
+\sum_{k=1}^K N_k \frac{\lambda}{N_k} \Big[ \frac{d}{d \lambda} \frac{N_k}{\lambda} \Big] + 1 = 
+\sum_{k=1}^K \frac{-N_k}{\lambda} + 1 \overset{!}{=} 0 \implies
+$$
+
+$$
+\begin{equation}
+\frac{1}{\lambda} \sum_{k=1}^K N_k = 1 \tag{15}
+\end{equation} 
+$$
+
+We remember that $$ N_k $$ was the number of elements in the dataset belonging to class $$ k $$, so naturally the sum of all $$ N_k $$'s will be $$ N $$, the total number of elements in the dataset. Thus, we can conclude that:
+
+$$ 
+\begin{equation} 
+\lambda = N \implies \pi_j = \frac{N_j}{N}  \tag{16}
+\end{equation}
+$$ 
+
+So we arrived at a simple result stating that the estimated probability for each class must be the empirical probability of that class, measured on dataset $$ \mathcal{D} $$.
+
+#### Estimating $$ \boldsymbol{\mu}_k $$
+
+Now, we look at the log likelihood again [10] and only keep the terms containing $$ \boldsymbol{\mu}_k $$:
+
+$$
+\log \mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma}) \propto
+\sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \log\mathcal{N}(\boldsymbol{x}_i \mid \boldsymbol{\mu}_k, \boldsymbol{\Sigma}_k)) = 
+$$
+
+$$
+\sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \Big( 
+		\underbrace{\log \frac{1}{(2 \pi)^{\frac{D}{2}}} + 
+					\log \frac{1}{\det(\boldsymbol{\Sigma_k})^{\frac{1}{2}}}}_{\text{ct. w.r.t } \boldsymbol{\mu_k}} -
+		\frac{1}{2} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)
+		\Big) \propto
+$$
+
+$$
+\sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \Big( 
+-\frac{1}{2} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)
+		\Big) \implies
+$$
+
+$$
+\nabla_{\boldsymbol{\mu_j}}{\log \mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma})} =
+\sum_{i=1}^N I[y_i = j]  \Big( -\frac{1}{2} 2 \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_j)
+\Big) \overset{!}{=} 0 \implies
+$$
+
+$$
+\sum_{i=1}^N I[y_i = j]  (\boldsymbol{x_i} - \boldsymbol{\mu}_j) = 0 \implies
+\sum_{i=1}^N I[y_i = j] \boldsymbol{x_i} = \boldsymbol{\mu_j} \underbrace{\sum_{i=1}^N I[y_i = j]}_{N_j} \implies 
+$$
+
+$$
+\begin{equation}
+\boldsymbol{\mu_j} = \frac{1}{N_j} \sum_{i=1}^N I[y_i = j] \boldsymbol{x_i}
+\tag{17}
+\end{equation}
+$$
+
+Again, we arrived at a very simple result: the mean of each class conditional is the empirical mean of all data points belonging to that class.
+
+#### Estimating $$ \boldsymbol{\Sigma}_k $$
+
+
+### Decision boundary
+
+### Code 
+
+
+
