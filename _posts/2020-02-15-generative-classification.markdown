@@ -517,7 +517,7 @@ The model above might have too many parameters for some applications, so it can 
 ### Visualisation
 
 
-![Probabilities](https://github.com/AndreeaMusat/AndreeaMusat.github.io/blob/master/img/generative_classification_gaussian.png)
+![Probabilities](../img/generative_classification_gaussian.png)
 
 #### Credits
 
