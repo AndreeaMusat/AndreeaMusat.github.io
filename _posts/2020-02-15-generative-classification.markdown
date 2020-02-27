@@ -516,7 +516,7 @@ The model above might have too many parameters for some applications, so it can 
 
 ### Visualisation
 
-![alt text](TODO)
+![alt text](https://github.com/AndreeaMusat/AndreeaMusat.github.io/blob/master/_posts/generative_classification_gaussian.png)
 
 #### Credits
 
