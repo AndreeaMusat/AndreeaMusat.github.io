@@ -1,21 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Website Title</title>
+    <title>Andreea Mușat</title>
     <description>No description.</description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml" />
-    
-      <item>
-        <title>Generative methods for classification</title>
-        <description>
-          
-          Prerequisites Basic calculus (logarithm rules, computing derivatives, properties of derivatives, chain rule for derivatives) Linear algebra (properties of traces, matrix inverses, determinants, properties of symmetric matrices) Basic probability and bayesian statistics notions (prior, posterior, Bayes’ rule, joint probability, independence, probability chain rule, Gaussian distribution, categorical distribution, most of them can...
-        </description>
-        <pubDate>Sat, 15 Feb 2020 02:45:48 -0800</pubDate>
-        <link>http://localhost:4000/2020-02-15-generative-classification/</link>
-        <guid isPermaLink="true">http://localhost:4000/2020-02-15-generative-classification/</guid>
-      </item>
     
   </channel>
 </rss>

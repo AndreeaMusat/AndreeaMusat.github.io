@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Generative methods for classification"
-date:   2020-02-15 11:45:48 +0100
+date:   2020-02-28 00:14:48 +0200
 categories: ml
 mathjax: true
 ---
