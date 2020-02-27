@@ -8,9 +8,11 @@ mathjax: true
 
 #### Prerequisites
 
-+ Basic calculus (logarithm rules, taking derivatives)
-+ Basic probability and bayesian statistics notions (prior, posterior, Bayes' rule, joint probability, independence, Gaussian distribution, categorical distribution, most of them can be found [here](https://www.cs.princeton.edu/~bee/courses/scribe/lec_08_26_2013.pdf))
++ Basic calculus (logarithm rules, computing derivatives, properties of derivatives, chain rule for derivatives)
++ Linear algebra (properties of traces, matrix inverses, determinants, properties of symmetric matrices)
++ Basic probability and bayesian statistics notions (prior, posterior, Bayes' rule, joint probability, independence, probability chain rule, Gaussian distribution, categorical distribution, most of them can be found [here](https://www.cs.princeton.edu/~bee/courses/scribe/lec_08_26_2013.pdf))
 + Optimization concepts (convex and concave functions, finding extrema points, method of Lagrange multipliers)
++ Matrix calculus (gradients and their properties, some identities involving gradients)
 
 ### Probabilistic framework for generative classification
 
@@ -281,28 +283,197 @@ $$
 \sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \Big( 
 					\log \frac{1}{\det(\boldsymbol{\Sigma_k})^{\frac{1}{2}}} -
 		\frac{1}{2} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)
-		\Big) \implies
+		\Big) =
 $$
 
-<!-- $$
-\nabla_{\boldsymbol{\Sigma_j}}{\log \mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma})} =
+$$ 
+\begin{equation}
+\frac{1}{2} \sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \Big( 
+	\log \det(\boldsymbol{\Sigma_k^{-1}}) -
+		(\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)
+		\Big)
+\tag{18}
+\end{equation}
+$$
+
+Because the function is concave in $$ \boldsymbol{\Sigma_j^{-1}} $$, we can compute the gradient w.r.t $$ \boldsymbol{\Sigma_j^{-1}} $$ directly:
+
+$$
+\nabla_{\boldsymbol{\Sigma_j^{-1}}}{\log \mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma})} = 
 $$
 
 $$
-\sum_{i=1}^N I[y_i = j] \Bigg( 
-					\nabla_{\boldsymbol{\Sigma_j}} \Big( \log \det(\boldsymbol{\Sigma_k^{-1}})^{\frac{1}{2}} \Big) -
-		\nabla_{\boldsymbol{\Sigma_j}} \Big( \frac{1}{2} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_k) \Big)
+\begin{equation}
+\frac{1}{2} \sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \Bigg( 
+	\nabla_{\boldsymbol{\Sigma_j^{-1}}} \Big( \log \det(\boldsymbol{\Sigma_k^{-1}}) \Big) -
+		\nabla_{\boldsymbol{\Sigma_j^{-1}}} \Big( (\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_k) \Big)
 		\Bigg)
+\tag{19}
+\end{equation}
 $$
 
-For simplicity, we will separately compute the two gradients:
+We will compute the two gradients separately. For the first one we will use the log-determinant gradient rule from the table [here](https://en.wikipedia.org/wiki/Matrix_calculus?fbclid=IwAR1Pci6kG1MD87fkUfx8OZmh-YJVHLzcWBoI1dl3y5sFQb-ucvdxyWa3atQ#Scalar-by-matrix_identities), coupled with the fact that $$ \boldsymbol{\Sigma_k} $$ is a covariance matrix, thus symmetric:
 
-$$ \nabla_{\boldsymbol{\Sigma_j}} \Big( \log \det(\boldsymbol{\Sigma_k^{-1}})^{\frac{1}{2}} \Big) =
-$$ -->
+$$ 
+\nabla_{\boldsymbol{\Sigma_j^{-1}}} \Big( \log \det(\boldsymbol{\Sigma_k^{-1}}) \Big) 
+\overset{\frac{\partial \log (\det (\boldsymbol{X}))}{\partial \boldsymbol{X}} = (\boldsymbol{X}^{-1})^T }{=\mathrel{\mkern-3mu}=\mathrel{\mkern-3mu}=}
+\left\{
+	\begin{array}{ll}
+     0 \text{, if } j \neq k \\
+     ((\boldsymbol{\Sigma_k}^{-1})^{-1})^T \text{, if } j = k
+\end{array} 
+\right. 
+$$
+
+$$
+\begin{equation}
+\overset{\boldsymbol{\Sigma_k} \text{ symm.}}{=}
+\left\{
+	\begin{array}{ll}
+     0 \text{, if } j \neq k \\
+     \boldsymbol{\Sigma_k} \text{, if } j = k
+\end{array} 
+\right. 
+\tag{20}
+\end{equation}
+$$
+
+For the second one, in a similar way, if $$ k \neq j $$, then the gradient is 0. For $$ k = j$$, we can notice that the expression under the gradient is a scalar, so we can apply the trace operator on it, as $$ Tr(a) = a, \forall a \in \mathbb{R} $$. The trace operator has some nice properties, such as the [cyclic property](https://en.wikipedia.org/wiki/Trace_(linear_algebra)#Cyclic_property) and [allowing transposing](https://en.wikipedia.org/wiki/Trace_(linear_algebra)#Basic_properties), so using the rule for the gradient of a product of two matrices w.r.t one of the matrices (from the table [here](https://en.wikipedia.org/wiki/Matrix_calculus?fbclid=IwAR1Pci6kG1MD87fkUfx8OZmh-YJVHLzcWBoI1dl3y5sFQb-ucvdxyWa3atQ#Scalar-by-matrix_identities)), we get:
+
+$$
+\nabla_{\boldsymbol{\Sigma_k^{-1}}} \Big( (\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_k) \Big) = 
+\nabla_{\boldsymbol{\Sigma_k^{-1}}}  Tr \Big((\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_k) \Big) \overset{\text{cyclic prop.}}{=}
+$$
+
+$$
+\nabla_{\boldsymbol{\Sigma_k^{-1}}}  Tr \Big(\boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_k) (\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \Big) 
+\overset{\frac{\partial Tr(\boldsymbol{XA})}{\partial \boldsymbol{X}} = \boldsymbol{A}^T}{=\mathrel{\mkern-3mu}=\mathrel{\mkern-3mu}=}
+\Big( (\boldsymbol{x_i} - \boldsymbol{\mu}_k) (\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \Big)^T =
+$$
+
+$$
+\begin{equation}
+(\boldsymbol{x_i} - \boldsymbol{\mu}_k) (\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T 
+\tag{21}
+\end{equation}
+$$
+
+Now, using the results (20) and (21) and plugging them into the expression of the gradient of the log likelihood w.r.t $$ \boldsymbol{\Sigma_j}^{-1} $$ (19), we finally get:
+
+$$
+\nabla_{\boldsymbol{\Sigma_j^{-1}}}{\log \mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma})} = 
+\frac{1}{2} \sum_{i=1}^N I[y_i = j] \Bigg( 
+	\underbrace{\boldsymbol{\Sigma_j}}_{\text{ct. w.r.t i}} -
+	(\boldsymbol{x_i} - \boldsymbol{\mu}_j) (\boldsymbol{x_i} - \boldsymbol{\mu}_j)^T 	
+		\Bigg)
+\overset{!}{=} 0 \implies
+$$
+
+$$
+\boldsymbol{\Sigma_j} \underbrace{\sum_{i=1}^N I[y_i = j]}_{N_j}  =
+\sum_{i=1}^N I[y_i = j] (\boldsymbol{x_i} - \boldsymbol{\mu}_j) (\boldsymbol{x_i} - \boldsymbol{\mu}_j)^T \implies
+$$
+
+$$
+\boldsymbol{\Sigma_j} = \frac{1}{N_j} \sum_{i=1}^N I[y_i = j] (\boldsymbol{x_i} - \boldsymbol{\mu}_j) (\boldsymbol{x_i} - \boldsymbol{\mu}_j)^T \tag{22}
+$$
+
+which is the MLE estimate of the covariance of the data points having class $$ j $$.
 
 ### Decision boundary
 
-### Code 
+Now, having estimated the parameters of the assumed distributions, let's inspect the shape of the decision boundary. The decision boundary is the hypersurface separating data points from 2 different classes, let's say class $$ i $$ and class $$ j $$, so the points on this hypersurface have equal posterior probability of being assigned to either of the two classes: 
+
+$$ \boldsymbol{x} \in \text{DecisionBoundary} \iff p(y = i \mid \boldsymbol{x}) = p(y = j \mid \boldsymbol{x}) \tag{23} $$
+
+Using Bayes' rule as in (2), we can write an equivalent condition:
+
+$$ 
+\frac{p(\boldsymbol{x} \mid y = i) p(y = i)}{p(\boldsymbol{x})} = \frac{p(\boldsymbol{x} \mid y = j) p(y = j)}{p(\boldsymbol{x})} \iff
+\frac{p(\boldsymbol{x} \mid y = i) p(y = i)}{p(\boldsymbol{x} \mid y = j) p(y = j)} = 1 \iff
+$$
+
+$$
+\log \frac{p(\boldsymbol{x} \mid y = i)}{p(\boldsymbol{x} \mid y = j)} + \log \frac{p(y = i)}{p(y = j)} = 0 \iff
+$$
+
+$$
+
+\log 
+	\frac
+	{
+		\require{cancel} \cancel{\frac{1}{(2 \pi)^{\frac{D}{2}}}} 
+		\frac{1}{\det(\boldsymbol{\Sigma_i})^{\frac{1}{2}}}
+		e^{-\frac{1}{2} (\boldsymbol{x} - \boldsymbol{\mu_i})^T \boldsymbol{\Sigma_i}^{-1} (\boldsymbol{x} - \boldsymbol{\mu_i})}
+	}
+	{
+		\cancel{\frac{1}{(2 \pi)^{\frac{D}{2}}}}
+		\frac{1}{\det(\boldsymbol{\Sigma_j})^{\frac{1}{2}}}
+		e^{-\frac{1}{2} (\boldsymbol{x} - \boldsymbol{\mu_j})^T \boldsymbol{\Sigma_j}^{-1} (\boldsymbol{x} - \boldsymbol{\mu_j})}
+	} + 
+	\log \frac{\pi_i}{\pi_j}
+= 0 \iff
+$$
+
+$$
+\frac{1}{2} \log \frac{\det(\boldsymbol{\Sigma_j})}{\det(\boldsymbol{\Sigma_i})}
+-\frac{1}{2} (\boldsymbol{x} - \boldsymbol{\mu_i})^T \boldsymbol{\Sigma_i}^{-1} (\boldsymbol{x} - \boldsymbol{\mu_i})
++\frac{1}{2} (\boldsymbol{x} - \boldsymbol{\mu_j})^T \boldsymbol{\Sigma_j}^{-1} (\boldsymbol{x} - \boldsymbol{\mu_j})
++ \log \frac{\pi_i}{\pi_j} = 0 
+$$
+
+$$
+\iff
+$$
+
+$$
+(\boldsymbol{x} - \boldsymbol{\mu_j})^T \boldsymbol{\Sigma_j}^{-1} (\boldsymbol{x} - \boldsymbol{\mu_j}) -
+(\boldsymbol{x} - \boldsymbol{\mu_i})^T \boldsymbol{\Sigma_i}^{-1} (\boldsymbol{x} - \boldsymbol{\mu_i}) 
++ 2 \log \frac{\pi_i}{\pi_j}
++ \log \frac{\det(\boldsymbol{\Sigma_j})}{\det(\boldsymbol{\Sigma_i})} = 0 \tag{24}
+$$
+
+Now, looking at the expression above, we can see that the decision boundary is quadratic. We'll expand it further to see each coefficient clearly:
+
+$$
+\boldsymbol{x}^T \boldsymbol{\Sigma_j}^{-1} \boldsymbol{x} -
+2 \boldsymbol{x}^T \boldsymbol{\Sigma_j}^{-1} \boldsymbol{\mu_j} +
+\boldsymbol{\mu_j}^T \boldsymbol{\Sigma_j}^{-1} \boldsymbol{\mu_j} \\
+- \boldsymbol{x}^T \boldsymbol{\Sigma_i}^{-1} \boldsymbol{x} +
+2 \boldsymbol{x}^T \boldsymbol{\Sigma_i}^{-1} \boldsymbol{\mu_i} -
+\boldsymbol{\mu_i}^T \boldsymbol{\Sigma_i}^{-1} \boldsymbol{\mu_i} + \\
+2 \log \frac{\pi_i}{\pi_j}
++ \log \frac{\det(\boldsymbol{\Sigma_j})}{\det(\boldsymbol{\Sigma_i})} = 0 \iff
+$$
+
+$$
+\boldsymbol{x}^T \boldsymbol{A} \boldsymbol{x} + + \boldsymbol{x}^T  \boldsymbol{b} + c \tag{25}
+$$
+
+where
+
+$$
+\boldsymbol{A} = (\boldsymbol{\Sigma_j}^{-1} - \boldsymbol{\Sigma_i}^{-1}), \tag{26} 
+$$
+
+$$
+\boldsymbol{b} = -2 (\boldsymbol{\Sigma_j}^{-1} \boldsymbol{\mu_j} - \boldsymbol{\Sigma_i}^{-1} \boldsymbol{\mu_i}), \tag{27}
+$$
+
+$$
+c = \boldsymbol{\mu_j}^T \boldsymbol{\Sigma_j}^{-1} \boldsymbol{\mu_j} 
+- \boldsymbol{\mu_i}^T \boldsymbol{\Sigma_i}^{-1} \boldsymbol{\mu_i}
++ 2 \log \frac{\pi_i}{\pi_j}
++ \log \frac{\det(\boldsymbol{\Sigma_i^{-1}})}{\det(\boldsymbol{\Sigma_j^{-1}})}  \tag{28}
+$$
+
+#### Linear Discriminant Analysis for classification
+
+The model above might have too many parameters for some applications, so it can be simplified by assuming that the covariance matrix is the same for all classes, that is $$ \boldsymbol{\Sigma_i} = \boldsymbol{\Sigma}, \forall i \in \{1, 2, \dots k\} $$, in which case the decision boundary will be linear, because the $$ \boldsymbol{A} $$ term (26) will vanish.
+
+### Visualisations and Code 
+
+#### Credits
 
 
 
