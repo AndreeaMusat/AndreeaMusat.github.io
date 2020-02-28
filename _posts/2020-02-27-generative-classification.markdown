@@ -32,7 +32,7 @@ mathjax: true
 
 ### Probabilistic framework for generative classification <a name="prob-framework-gen-classif"></a>
 
-Classification is the problem of assigning a discrete label (class) to a data point. Unlike discriminant methods, where the class is assigned directly, without any measure of uncertainty, a generative approach models the joint probability of the data: 
+Classification is the problem of assigning a discrete label (class) to a data point. Unlike discriminant methods, where the class is assigned directly, a generative approach models the joint probability of the data: 
 
 
 \begin{equation}
