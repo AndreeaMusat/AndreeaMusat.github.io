@@ -621,7 +621,7 @@ plt<span style="color: #555555">.</span>show()
 
 #### Generated samples
 
-The generated samples look pretty reasonable for such a simple model and a 5 lines code!
+The generated samples look pretty reasonable for such a simple model and a few lines of code!
 
 <img src="../img/generated_digits_naive_bayes.png" alt="drawing" width="560" class="center">
 
