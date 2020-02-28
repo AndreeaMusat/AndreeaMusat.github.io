@@ -14,8 +14,23 @@ mathjax: true
 + Basic probability and bayesian statistics notions (prior, posterior, Bayes' rule, joint probability, independence, probability chain rule, Gaussian distribution, categorical distribution, most of them can be found [here](https://www.cs.princeton.edu/~bee/courses/scribe/lec_08_26_2013.pdf))
 + Optimization concepts (convex and concave functions, finding extrema points, method of Lagrange multipliers)
 + Matrix calculus (gradients and their properties, some identities involving gradients)
++ Coding in python + numpy
 
-### Probabilistic framework for generative classification
+## Table of contents
+1. [Probabilistic framework for generative classification](#prob-framework-gen-classif)
+2. [Normally distributed inputs](#normal-inputs)
+3. [Maximum likelihood estimation](#mle)
+	1. [Computing the log likelihood of the dataset](#ll)
+	2. [Estimating the class priors](#pi)
+	3. [Estimating the means](#mu)
+	4. [Estimating the covariance matrices](#gamma)
+4. [Decision boundary](#decision-boundary)
+	1. [Shape of decision boundary](#decision-shape)
+	2. [Decision boundary and probability plots](#vis)
+5. [Code](#code)
+6. [Generative power](#gen)
+
+### Probabilistic framework for generative classification <a name="prob-framework-gen-classif"></a>
 
 Classification is the problem of assigning a discrete label (class) to a data point. Unlike discriminant methods, where the class is assigned directly, without any measure of uncertainty, a generative approach models the joint probability of the data: 
 
@@ -51,7 +66,7 @@ y_{new} = \arg\max_{k} p(y = k \mid \boldsymbol{x}_{new}) \tag{3}
 $$
 
 
-### Normally distributed inputs
+## Normally distributed inputs <a name="normal-inputs"></a>
 
 Up to this point, we have only established the probabilistic framework we will use, but we haven't made any assumption about the distribution of the data within each class. We will continue by making some assumptions about the underlying distributions of the data and then estimating the parameters of these distributions.
 
@@ -75,7 +90,7 @@ p(y = k) = \pi_k, \forall k \in \{1, 2, \dots K\} \tag{5}
 \end{equation}
 $$
 
-### Maximum Likelihood Estimation (MLE) of the parameters
+### Maximum Likelihood Estimation (MLE) <a name="mle"></a>
 
 Before moving on, let's recap what we have until now: we modeled the class priors using a categorical distribution with parameters $$ \boldsymbol{\pi} $$ and the class conditionals using Gaussian distributions with means $$ \boldsymbol{\mu}_k $$ and covariance matrices $$ \boldsymbol{\Sigma}_k, \forall k \in \{1, 2, \dots k \} $$. However, the parameters of these distributions are not known, so we must use the dataset in order to estimate them.
 
@@ -122,7 +137,7 @@ $$
 
 where $$ I[\text{condition}] $$ is the indicator function (see [Iverson bracket](https://en.wikipedia.org/wiki/Iverson_bracket)) which evaluates to 1 only if the condition inside the brackets is true.
 
-#### Log likelihood of the dataset
+#### Computing the log likelihood of the dataset <a name="ll"></a>
 
 Assuming we have a dataset consisting of N [independent and identically distributed](https://en.wikipedia.org/wiki/Independent_and_identically_distributed_random_variables) samples, $$ \mathcal{D} = \{(\boldsymbol{x}_i, y_i)_{i=1}^N\}$$, we can write the likelihood of the data as the product of the probabilities of all samples:
 
@@ -146,7 +161,7 @@ $$
 \end{equation}
 $$
 
-#### Estimating $$ \boldsymbol{\pi}_k $$
+#### Estimating $$ \boldsymbol{\pi}_k $$ <a name="pi"></a>
 
 We first notice that $$ \pi_k $$ appears in the log likelihood only through the term $$ \log \pi_k $$, so we can ignore the other term which doesn't depend on it:
 
@@ -159,7 +174,7 @@ $$
 
 Because the $$ \pi_k $$'s are constrained such that $$ \sum_{k=1}^K \pi_k = 1 $$ (as they are the parameters of a categorical distribution), we can use the method of Lagrange multipliers to find the maximizer of the log likelihood subject to this constraint.
 
-We formulate the Lagrangian:
+We formulate the Lagrangian (which is concave in both $$ \boldsymbol{\pi} $$ and $$ \lambda $$, so the solution will be indeed a maximum):
 
 $$
 \begin{equation}
@@ -220,7 +235,7 @@ $$
 
 So we arrived at a simple result stating that the estimated probability for each class must be the empirical probability of that class, measured on dataset $$ \mathcal{D} $$.
 
-#### Estimating $$ \boldsymbol{\mu}_k $$
+#### Estimating $$ \boldsymbol{\mu}_k $$ <a name="mu"></a>
 
 Now, we look at the log likelihood again [10] and only keep the terms containing $$ \boldsymbol{\mu}_k $$:
 
@@ -240,9 +255,10 @@ $$
 $$
 \sum_{i=1}^N \sum_{k=1}^K I[y_i = k] \Big( 
 -\frac{1}{2} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)^T \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_k)
-		\Big) \implies
+		\Big)
 $$
 
+Note that the log likelihood is concave in $$ \boldsymbol{\mu_k} $$ (quadratic with negative coefficient), so taking the gradient w.r.t $$ {\boldsymbol{\mu_j}} $$ and setting it to zero is sufficient to find the maximum:
 $$
 \nabla_{\boldsymbol{\mu_j}}{\log \mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma})} =
 \sum_{i=1}^N I[y_i = j]  \Big( -\frac{1}{2} 2 \boldsymbol{\Sigma}_k^{-1} (\boldsymbol{x_i} - \boldsymbol{\mu}_j)
@@ -263,7 +279,7 @@ $$
 
 Again, we arrived at a very simple result: the mean of each class conditional is the empirical mean of all data points belonging to that class.
 
-#### Estimating $$ \boldsymbol{\Sigma}_k $$
+#### Estimating $$ \boldsymbol{\Sigma}_k $$ <a name="sigma"></a>
 
 Similarly, we find the optimal $$ \boldsymbol{\Sigma_k} $$ by computing the gradient of the log likelihood w.r.t $$ \boldsymbol{\Sigma_k} $$ and setting it to zero.
 
@@ -297,7 +313,7 @@ $$
 \end{equation}
 $$
 
-Because the function is concave in $$ \boldsymbol{\Sigma_j^{-1}} $$, we can compute the gradient w.r.t $$ \boldsymbol{\Sigma_j^{-1}} $$ directly:
+Because the function is concave in $$ \boldsymbol{\Sigma_j^{-1}} $$ ([log determinant is concave](https://math.stackexchange.com/questions/1192329/log-determinant-concavity-proof)), we can compute the gradient w.r.t $$ \boldsymbol{\Sigma_j^{-1}} $$ directly:
 
 $$
 \nabla_{\boldsymbol{\Sigma_j^{-1}}}{\log \mathcal{L}(\mathcal{D} \mid \boldsymbol{\pi}, \boldsymbol{\mu}, \boldsymbol{\Sigma})} = 
@@ -382,7 +398,9 @@ $$
 
 which is the MLE estimate of the covariance of the data points having class $$ j $$.
 
-### Decision boundary
+### Decision boundary <a name="decision-boundary"></a>
+
+#### Shape of decision boundary <a name="decision-shape"></a>
 
 Now, having estimated the parameters of the assumed distributions, let's inspect the shape of the decision boundary. The decision boundary is the hypersurface separating data points from 2 different classes, let's say class $$ i $$ and class $$ j $$, so the points on this hypersurface have equal posterior probability of being assigned to either of the two classes: 
 
@@ -474,7 +492,24 @@ $$
 
 The model above might have too many parameters for some applications, so it can be simplified by assuming that the covariance matrix is the same for all classes, that is $$ \boldsymbol{\Sigma_i} = \boldsymbol{\Sigma}, \forall i \in \{1, 2, \dots k\} $$, in which case the decision boundary will be linear, because the $$ \boldsymbol{A} $$ term (26) will vanish.
 
-### Code 
+#### Decision boundary and probability plots <a name="vis"></a>
+
+In order to visualize the decision boundary of the model, as well as the probabilities assigned by the classifier, I first generated some data using the following process:
+
+$$
+k \sim \text{Categorical}(\boldsymbol{\pi}) \\
+x \sim \mathcal{N}(x \mid \boldsymbol{\mu_k}, \boldsymbol{\Sigma_k})
+$$
+
+The colour scheme in the plots encodes the probabilities assigned by the classifier to each class and the white line is the decision boundary.
+
+For the plot on the left, I used $$ \pi_1 = \pi_2 = 0.5 $$, means $$ \boldsymbol{\mu_1} = \begin{bmatrix} 0 & 2 \end{bmatrix}^T $$ (dark blue class), $$ \boldsymbol{\mu_2} = \begin{bmatrix} 3 & 4 \end{bmatrix}^T $$ (dark red class) and covariance matrices $$ \boldsymbol{\Sigma_1} = \boldsymbol{\Sigma_2} = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix}$$. Because the model estimates different covariance matrices for different classes, we can notice that they are slightly different by looking at the shape of the contour plots (so in reality the decision boundary is 'almost linear'). For an interactive version of the plot generated with [plotly](https://plot.ly/), see [this](../plots/generative_classification_gaussian_inputs_linear_boundary.html).
+
+The paramteres for the plot on the right were: $$ \pi_1 = 0.6 $$ (dark blue class), $$ \pi_2 = 0.4 $$ (dark red class), $$ \boldsymbol{\mu_1} = \begin{bmatrix} 0 & 2 \end{bmatrix}^T $$, $$ \boldsymbol{\mu_1} = \begin{bmatrix} 0 & 1 \end{bmatrix}^T $$, $$ \boldsymbol{\mu_2} = \begin{bmatrix} 4 & 5 \end{bmatrix}^T $$, $$ \boldsymbol{\Sigma_1} = \begin{bmatrix} 2.5 & 2 \\ 2 & 3 \end{bmatrix} $$ and $$ \boldsymbol{\Sigma_2} = \begin{bmatrix} 1 & 0 \\ 0 & 1 \end{bmatrix} $$. An interactive version is [here](../plots/generative_classification_gaussian_inputs_quadratic_boundary.html).
+
+![Decision boundaries](../img/generative_classification_gaussian.png)
+
+### Code <a name="code"></a>
 
 <!-- HTML generated using hilite.me --><div style="background: #f0f3f3; overflow:auto;width:auto;border:solid gray;border-width:.0em .0em .0em .0em;padding:.0em .0em;"><pre style="margin: 0; line-height: 125%"><span style="color: #006699; font-weight: bold">import</span> <span style="color: #00CCFF; font-weight: bold">numpy</span> <span style="color: #006699; font-weight: bold">as</span> <span style="color: #00CCFF; font-weight: bold">np</span>
 <span style="color: #006699; font-weight: bold">from</span> <span style="color: #00CCFF; font-weight: bold">plotly</span> <span style="color: #006699; font-weight: bold">import</span> subplots
@@ -485,9 +520,26 @@ The model above might have too many parameters for some applications, so it can 
 
 <span style="color: #006699; font-weight: bold">class</span> <span style="color: #00AA88; font-weight: bold">GenerativeGaussianClassifier</span>(<span style="color: #336666">object</span>):
   <span style="color: #006699; font-weight: bold">def</span> <span style="color: #CC00FF">__init__</span>(<span style="color: #336666">self</span>, K):
+    <span style="color: #CC3300; font-style: italic">&quot;&quot;&quot;Initialize a generative classifier for Gaussian inputs. </span>
+
+<span style="color: #CC3300; font-style: italic">    Parameters</span>
+<span style="color: #CC3300; font-style: italic">    ----------</span>
+<span style="color: #CC3300; font-style: italic">    K: int, the number of classes</span>
+<span style="color: #CC3300; font-style: italic">    &quot;&quot;&quot;</span>
     <span style="color: #336666">self</span><span style="color: #555555">.</span>K <span style="color: #555555">=</span> K
 
   <span style="color: #006699; font-weight: bold">def</span> <span style="color: #CC00FF">fit</span>(<span style="color: #336666">self</span>, Xs, ys):
+    <span style="color: #CC3300; font-style: italic">&quot;&quot;&quot;Estimate the parameters of the model.</span>
+<span style="color: #CC3300; font-style: italic">    </span>
+<span style="color: #CC3300; font-style: italic">    Fit a categorical with K classes (self.pis) representing the</span>
+<span style="color: #CC3300; font-style: italic">    class priors and K Gaussians (with means self.mus and covariances</span>
+<span style="color: #CC3300; font-style: italic">    self.gammas) as class conditionals.</span>
+
+<span style="color: #CC3300; font-style: italic">    Parameters</span>
+<span style="color: #CC3300; font-style: italic">    ----------</span>
+<span style="color: #CC3300; font-style: italic">    Xs: np.ndarray of inputs having shape (num_samples, sample_size)</span>
+<span style="color: #CC3300; font-style: italic">    ys: np.ndarray of labels having shape (num_samples, )</span>
+<span style="color: #CC3300; font-style: italic">    &quot;&quot;&quot;</span>
     cls_counts <span style="color: #555555">=</span> np<span style="color: #555555">.</span>bincount(ys)
     get_mean <span style="color: #555555">=</span> <span style="color: #006699; font-weight: bold">lambda</span> k: Xs[ys <span style="color: #555555">==</span> k]<span style="color: #555555">.</span>mean(<span style="color: #FF6600">0</span>)
     get_cov <span style="color: #555555">=</span> <span style="color: #006699; font-weight: bold">lambda</span> k: np<span style="color: #555555">.</span>dot((Xs[ys <span style="color: #555555">==</span> k] <span style="color: #555555">-</span> <span style="color: #336666">self</span><span style="color: #555555">.</span>mus[k])<span style="color: #555555">.</span>T, \
@@ -500,6 +552,16 @@ The model above might have too many parameters for some applications, so it can 
     <span style="color: #336666">self</span><span style="color: #555555">.</span>cls_cond <span style="color: #555555">=</span> [get_cls_cond(k) <span style="color: #006699; font-weight: bold">for</span> k <span style="color: #000000; font-weight: bold">in</span> <span style="color: #336666">range</span>(<span style="color: #336666">self</span><span style="color: #555555">.</span>K)]
 	
   <span style="color: #006699; font-weight: bold">def</span> <span style="color: #CC00FF">predict_scores</span>(<span style="color: #336666">self</span>, Xs):
+    <span style="color: #CC3300; font-style: italic">&quot;&quot;&quot;Use the fitted classifier to predict scores for new data.</span>
+
+<span style="color: #CC3300; font-style: italic">    Parameters</span>
+<span style="color: #CC3300; font-style: italic">    ----------</span>
+<span style="color: #CC3300; font-style: italic">    Xs: np.ndarray of inputs having shape (num_samples, sample_size)</span>
+
+<span style="color: #CC3300; font-style: italic">    Returns</span>
+<span style="color: #CC3300; font-style: italic">    -------</span>
+<span style="color: #CC3300; font-style: italic">    scores: np.ndarray of unnormalized scores (not probabilities)</span>
+<span style="color: #CC3300; font-style: italic">    &quot;&quot;&quot;</span>
     scores <span style="color: #555555">=</span> np<span style="color: #555555">.</span>zeros((<span style="color: #336666">len</span>(Xs), <span style="color: #336666">self</span><span style="color: #555555">.</span>K), <span style="color: #336666">float</span>)
     comp_score <span style="color: #555555">=</span> <span style="color: #006699; font-weight: bold">lambda</span> k, X: <span style="color: #336666">self</span><span style="color: #555555">.</span>pis[k] <span style="color: #555555">*</span> <span style="color: #336666">self</span><span style="color: #555555">.</span>cls_cond[k]<span style="color: #555555">.</span>pdf(X)
     <span style="color: #006699; font-weight: bold">for</span> i <span style="color: #000000; font-weight: bold">in</span> <span style="color: #336666">range</span>(<span style="color: #336666">len</span>(Xs)):
@@ -507,19 +569,67 @@ The model above might have too many parameters for some applications, so it can 
     <span style="color: #006699; font-weight: bold">return</span> scores
 
   <span style="color: #006699; font-weight: bold">def</span> <span style="color: #CC00FF">predict</span>(<span style="color: #336666">self</span>, Xs):
-    <span style="color: #006699; font-weight: bold">return</span> np<span style="color: #555555">.</span>argmax(<span style="color: #336666">self</span><span style="color: #555555">.</span>predict_scores(Xs), axis<span style="color: #555555">=</span><span style="color: #FF6600">1</span>)
+    <span style="color: #CC3300; font-style: italic">&quot;&quot;&quot;Predict labels for new data.</span>
 
-  <span style="color: #006699; font-weight: bold">def</span> <span style="color: #CC00FF">accuracy</span>(<span style="color: #336666">self</span>, Xs, ys):
-    <span style="color: #006699; font-weight: bold">return</span> np<span style="color: #555555">.</span>mean(<span style="color: #336666">self</span><span style="color: #555555">.</span>predict(Xs) <span style="color: #555555">==</span> ys)
+<span style="color: #CC3300; font-style: italic">    For each input in Xs, return a number between 0 and K - 1</span>
+<span style="color: #CC3300; font-style: italic">    representing the class it was assigned to.</span>
+
+<span style="color: #CC3300; font-style: italic">    Parameters</span>
+<span style="color: #CC3300; font-style: italic">    ----------</span>
+<span style="color: #CC3300; font-style: italic">    Xs: np.ndarray of inputs having shape (num_samples, sample_size)</span>
+
+<span style="color: #CC3300; font-style: italic">    Returns</span>
+<span style="color: #CC3300; font-style: italic">    -------</span>
+<span style="color: #CC3300; font-style: italic">    labels: np.ndarray of predictions having shape (num_samples, )</span>
+<span style="color: #CC3300; font-style: italic">    &quot;&quot;&quot;</span>
+    labels <span style="color: #555555">=</span> np<span style="color: #555555">.</span>argmax(<span style="color: #336666">self</span><span style="color: #555555">.</span>predict_scores(Xs), axis<span style="color: #555555">=</span><span style="color: #FF6600">1</span>)
+    <span style="color: #006699; font-weight: bold">return</span> labels
 </pre></div>
 
 
-### Visualisation
+### Generative power <a name="code"></a>
 
+After fitting a model, it can also be used to generate new data points. This is, however, problematic in some situations, as the estimated covariance matrix might be singular when the data actually lives in a lower dimensional subspace. It wouldn't be very exciting to illustrate the generative power of these models on the example above, as it will simply generate points according to the 2 distributions encoded in the colours of the plot. Instead, we will look at a model fitted on MNIST digits, but a simplified version (named Naive Bayes) in which all features of a data point are assumed independent. Here, a univariate Gaussian is fitted for every pixel.
 
-![Probabilities](../img/generative_classification_gaussian.png)
+#### Code
 
-#### Credits
+<!-- HTML generated using hilite.me --><div style="background: #f0f3f3; overflow:auto;width:auto;border:solid gray;border-width:.0em .0em .0em .0em;padding:.0em .0em;"><pre style="margin: 0; line-height: 125%"><span style="color: #006699; font-weight: bold">import</span> <span style="color: #00CCFF; font-weight: bold">numpy</span> <span style="color: #006699; font-weight: bold">as</span> <span style="color: #00CCFF; font-weight: bold">np</span>
+<span style="color: #006699; font-weight: bold">import</span> <span style="color: #00CCFF; font-weight: bold">matplotlib.pyplot</span> <span style="color: #006699; font-weight: bold">as</span> <span style="color: #00CCFF; font-weight: bold">plt</span>
+<span style="color: #006699; font-weight: bold">from</span> <span style="color: #00CCFF; font-weight: bold">mnist</span> <span style="color: #006699; font-weight: bold">import</span> MNIST
 
+mndata <span style="color: #555555">=</span> MNIST(<span style="color: #CC3300">&#39;./mnist/&#39;</span>)
+Xs, ys <span style="color: #555555">=</span> mndata<span style="color: #555555">.</span>load_training()
+Xs <span style="color: #555555">=</span> np<span style="color: #555555">.</span>array(Xs)<span style="color: #555555">.</span>astype(<span style="color: #336666">float</span>) <span style="color: #555555">/</span> <span style="color: #FF6600">255.</span>
+ys <span style="color: #555555">=</span> np<span style="color: #555555">.</span>array(ys)
+
+<span style="color: #0099FF; font-style: italic"># Increase image contrast.</span>
+Xs <span style="color: #555555">=</span> (Xs <span style="color: #555555">-</span> Xs<span style="color: #555555">.</span>min(axis<span style="color: #555555">=</span><span style="color: #FF6600">0</span>)) <span style="color: #555555">/</span> (Xs<span style="color: #555555">.</span>max(axis<span style="color: #555555">=</span><span style="color: #FF6600">0</span>) <span style="color: #555555">-</span> Xs<span style="color: #555555">.</span>min(axis<span style="color: #555555">=</span><span style="color: #FF6600">0</span>) <span style="color: #555555">+</span> <span style="color: #FF6600">1e-5</span>)
+
+<span style="color: #0099FF; font-style: italic"># Estimate mean and variance for each pixel.</span>
+mus <span style="color: #555555">=</span> np<span style="color: #555555">.</span>stack([Xs[ys <span style="color: #555555">==</span> k]<span style="color: #555555">.</span>mean(axis<span style="color: #555555">=</span><span style="color: #FF6600">0</span>) <span style="color: #006699; font-weight: bold">for</span> k <span style="color: #000000; font-weight: bold">in</span> <span style="color: #336666">range</span>(<span style="color: #FF6600">10</span>)])
+var <span style="color: #555555">=</span> np<span style="color: #555555">.</span>stack([Xs[ys <span style="color: #555555">==</span> k]<span style="color: #555555">.</span>var(axis<span style="color: #555555">=</span><span style="color: #FF6600">0</span>) <span style="color: #006699; font-weight: bold">for</span> k <span style="color: #000000; font-weight: bold">in</span> <span style="color: #336666">range</span>(<span style="color: #FF6600">10</span>)])
+
+<span style="color: #0099FF; font-style: italic"># Generate a new sample from a random class.</span>
+y <span style="color: #555555">=</span> np<span style="color: #555555">.</span>random<span style="color: #555555">.</span>choice(<span style="color: #FF6600">10</span>)
+random_sample <span style="color: #555555">=</span> np<span style="color: #555555">.</span>stack([np<span style="color: #555555">.</span>random<span style="color: #555555">.</span>normal(mus[y][i], var[y][i]) \
+                          <span style="color: #006699; font-weight: bold">for</span> i <span style="color: #000000; font-weight: bold">in</span> <span style="color: #336666">range</span>(Xs<span style="color: #555555">.</span>shape[<span style="color: #FF6600">1</span>])])
+
+plt<span style="color: #555555">.</span>imshow(random_sample<span style="color: #555555">.</span>reshape(<span style="color: #FF6600">28</span>, <span style="color: #FF6600">28</span>))
+plt<span style="color: #555555">.</span>title(<span style="color: #CC3300">&#39;Generated image from class &#39;</span> <span style="color: #555555">+</span> <span style="color: #336666">str</span>(y))
+plt<span style="color: #555555">.</span>show()
+</pre></div>
+
+#### Generated samples
+
+The generated samples look pretty reasonable for such a simple model and a 5 lines code!
+
+<img src="../img/generated_digits_naive_bayes.png" alt="drawing" width="560" class="center">
+
+<!-- ![Generated digits](../img/generated_digits_naive_bayes.png =420x168) -->
+
+### Credits
+
+1. Bishop, Christopher M. Neural networks for pattern recognition. Oxford university press, 1995.
+2. [Decision boundaries visualised via python plotly](https://www.kaggle.com/arthurtok/decision-boundaries-visualised-via-python-plotly/notebook)
 
 

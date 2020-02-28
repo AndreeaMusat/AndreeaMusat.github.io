@@ -13,4 +13,12 @@
 <url>
 <loc>http://localhost:4000/tags/</loc>
 </url>
+<url>
+<loc>http://localhost:4000/plots/generative_classification_gaussian_inputs_linear_boundary.html</loc>
+<lastmod>2020-02-27T10:23:08-08:00</lastmod>
+</url>
+<url>
+<loc>http://localhost:4000/plots/generative_classification_gaussian_inputs_quadratic_boundary.html</loc>
+<lastmod>2020-02-27T11:38:24-08:00</lastmod>
+</url>
 </urlset>
