@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+  <!-- Beautiful Jekyll | MIT license | Copyright Dean Attali 2016 -->
+  <head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+
+  <title>Understanding EM as an MM algorithm</title>
+
+  <meta name="author" content="Andreea Mușat" />
+
+  
+
+  <link rel="alternate" type="application/rss+xml" title="Andreea Mușat - No description." href="http://localhost:4000/feed.xml" />
+
+  
+
+  
+
+  
+
+
+  
+    
+      
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.6.0/css/font-awesome.min.css" />
+
+
+    
+  
+
+  
+    
+      <link rel="stylesheet" href="/css/bootstrap.min.css" />
+    
+      <link rel="stylesheet" href="/css/bootstrap-social.css" />
+    
+      <link rel="stylesheet" href="/css/main.css" />
+    
+  
+
+  
+    
+      <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic" />
+    
+      <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800" />
+    
+  
+
+  
+
+  
+
+  
+
+    <!-- Facebook OpenGraph tags -->
+  
+
+  
+  <meta property="og:title" content="Understanding EM as an MM algorithm" />
+  
+
+   
+  <meta property="og:description" content="Prerequisites Information theory concepts (entropy, cross-entropy) Optimization concepts (convex/concave functions) Jensen’s inequality MM Algorithms Optimization is virtually the center of the machine learning universe. MM algorithms (where ‘MM’ stands for ‘Minorize-Maximize’ or ‘Majorize-Minimize’) are a simple prescription for creating optimization algorithms. Let’s assume we want to find the maximizer of...">
+  
+
+
+  <meta property="og:type" content="website" />
+
+  
+  <meta property="og:url" content="http://localhost:4000/2020-02-26-em/" />
+  <link rel="canonical" href="http://localhost:4000/2020-02-26-em/" />
+  
+
+  
+  <meta property="og:image" content="http://localhost:4000/img/avatar-icon.png" />
+  
+
+
+  <!-- Twitter summary cards -->
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:site" content="@" />
+  <meta name="twitter:creator" content="@" />
+
+  
+  <meta name="twitter:title" content="Understanding EM as an MM algorithm" />
+  
+
+  
+  <meta name="twitter:description" content="Prerequisites Information theory concepts (entropy, cross-entropy) Optimization concepts (convex/concave functions) Jensen’s inequality MM Algorithms Optimization is virtually the center of the machine learning universe. MM algorithms (where ‘MM’ stands for ‘Minorize-Maximize’ or ‘Majorize-Minimize’) are a simple prescription for creating optimization algorithms. Let’s assume we want to find the maximizer of...">
+  
+
+  
+  <meta name="twitter:image" content="http://localhost:4000/img/avatar-icon.png" />
+  
+
+  
+
+  
+
+</head>
+
+
+  <body>
+
+    
+
+  
+    <nav class="navbar navbar-default navbar-fixed-top navbar-custom">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#main-navbar">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button><a class="navbar-brand" href="http://localhost:4000/">Andreea Mușat</a></div>
+
+    <div class="collapse navbar-collapse" id="main-navbar">
+      <ul class="nav navbar-nav navbar-right">
+          <li><a href="/aboutme">About Me</a></li></ul>
+    </div>
+
+	
+	<div class="avatar-container">
+	  <div class="avatar-img-border">
+	    <a href="http://localhost:4000/">
+	      <img class="avatar-img" src="/img/avatar-icon.png" />
+		</a>
+	  </div>
+	</div>
+	
+
+  </div>
+</nav>
+
+
+    
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+<script
+  type="text/javascript"
+  charset="utf-8"
+  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"
+>
+</script>
+<script
+  type="text/javascript"
+  charset="utf-8"
+  src="https://vincenttam.github.io/javascripts/MathJaxLocal.js"
+>
+</script>
+
+<!-- TODO this file has become a mess, refactor it -->
+
+
+
+
+
+<header class="header-section ">
+
+<div class="intro-header no-img">
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <div class="post-heading">
+          <h1>Understanding EM as an MM algorithm</h1>
+		  
+		  
+		  
+		  <span class="post-meta">Posted on February 26, 2020</span>
+		  
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</header>
+
+
+
+
+
+<div class="container">
+  <div class="row">
+    <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+      
+      
+
+      <article role="main" class="blog-post">
+        <h4 id="prerequisites">Prerequisites</h4>
+
+<ul>
+  <li>Information theory concepts (entropy, cross-entropy)</li>
+  <li>Optimization concepts (convex/concave functions)</li>
+  <li>Jensen’s inequality</li>
+</ul>
+
+<h3 id="mm-algorithms">MM Algorithms</h3>
+
+<p>Optimization is virtually the center of the machine learning universe. MM algorithms (where ‘MM’ stands for ‘Minorize-Maximize’ or ‘Majorize-Minimize’) are a simple prescription for creating optimization algorithms.</p>
+
+<p>Let’s assume we want to find the maximizer of a function:</p>
+
+<script type="math/tex; mode=display">\boldsymbol{\theta^{*}} = \arg\max_{\boldsymbol{\theta}} f(\boldsymbol{\theta}) \text{, where } f \colon \Omega \subset \mathbb{R}^n \to \mathbb{R}</script>
+
+<p>which, for some reason or another, is very difficult to optimize. MM algorithms are iterative and their core idea is the following: instead of solving the difficult problem of directly optimizing <script type="math/tex">f</script>, build an easier-to-optimize surrogate function <script type="math/tex">g</script> and find its maximizer instead, then use this maximizer as a better approximation of the maximizer of the original function <script type="math/tex">f</script>. In order to have a better estimate for <script type="math/tex">\boldsymbol{\theta}</script> at each step, the function <script type="math/tex">g</script> needs to be a minorizer of <script type="math/tex">f</script>, that is, <script type="math/tex">g</script> needs to fulfill the following conditions:</p>
+
+<script type="math/tex; mode=display">g(\boldsymbol{\theta} \mid \boldsymbol{\theta^{(t)}}) \leq f(\boldsymbol{\theta}), \forall \boldsymbol{\theta} \in \Omega \text{ and} \tag{1}</script>
+
+<script type="math/tex; mode=display">g(\boldsymbol{\theta^{(t)}} \mid \boldsymbol{\theta^{(t)}}) = f(\boldsymbol{\theta^{(t)}}) \tag{2},</script>
+
+<p>where <script type="math/tex">\boldsymbol{\theta^{(t)}}</script> is the estimate at time step <script type="math/tex">t</script> and notation <script type="math/tex">g(\boldsymbol{\theta} \mid \boldsymbol{\theta^{(t)}})</script> means that the surrogate <script type="math/tex">g</script> at time step <script type="math/tex">t</script> depends on the current estimate <script type="math/tex">\boldsymbol{\theta^{(t)}}</script>.</p>
+
+<p>Condition (2) implies that the surrogate is tangent to the original function at the current estimate <script type="math/tex">\boldsymbol{\theta^{(t)}}</script>, while condition (1) specifies that the surrogate is a lower bound for the original function. Using these two conditions, we can prove that the next estimate <script type="math/tex">\boldsymbol{\theta^{(t + 1)}}</script> will be a better estimate than the current one, <script type="math/tex">\boldsymbol{\theta^{(t)}}</script>:</p>
+
+<script type="math/tex; mode=display">f(\boldsymbol{\theta^{(t + 1)}}) \overset{(1)}{\geq}
+g(\boldsymbol{\theta^{(t + 1)}} \mid \boldsymbol{\theta^{(t)}}) 
+\overset{\boldsymbol{\theta^{(t + 1)} \text{ maximizer of } g(\boldsymbol{\theta} \mid \boldsymbol{\theta^{(t)}}) }}{\geq}
+g(\boldsymbol{\theta^{(t)}} \mid \boldsymbol{\theta^{(t)}}) 
+\overset{(2)}{=}
+f(\boldsymbol{\theta^{(t)}}) \tag{3}</script>
+
+<p>The MM iterative process can be visualised in the figure below (adapted from <a href="https://www.researchgate.net/figure/The-iterative-optimization-by-the-MM-algorithm-Observe-that-f-x-is-monotonically_fig1_327110666">[3]</a> for consistent notation). The surrogate at step <script type="math/tex">t - 1</script> is the quadratic <script type="math/tex">g(\boldsymbol{\theta} \mid \boldsymbol{\theta^{(t - 1)}})</script>, which is tangent to <script type="math/tex">f</script> at <script type="math/tex">\boldsymbol{\theta^{t - 1}}</script>. The next estimate <script type="math/tex">\boldsymbol{\theta^{(t)}}</script> is the maximizer of this quadratic. Repeatedly following this procedure leads to better and better estimates of the maximizer of <script type="math/tex">f</script>.</p>
+
+<p><img src="../img/The-iterative-optimization-by-the-MM-algorithm.png" alt="drawing" width="560" class="center" /></p>
+
+<p>Now, we have a general recipe for solving hard optimization problems, but we still haven’t discussed ways of constructing the surrogate <script type="math/tex">g</script>. This article (<a href="http://www.leg.ufpr.br/~paulojus/EM/Tutorial%20on%20MM.pdf">[1]</a>) presents several methods for minorization/majorization. Here, we will only focus on the minorizer specific to the EM algorithm.</p>
+
+<p>But first, a refresher on KL divergence.</p>
+
+<h3 id="kullback-leibler-divergence">Kullback-Leibler divergence</h3>
+
+<p>The Kullback-Leibler divergence measures how different is a probability distribution <script type="math/tex">P</script> from another probability distribution <script type="math/tex">Q</script> defined on the same probability space <script type="math/tex">\mathcal{X}</script>.</p>
+
+<script type="math/tex; mode=display">\text{KL}(P \mid\mid Q) = 
+- \int_{\boldsymbol{X} \in \mathcal{X}} P(\boldsymbol{X}) \log_2 \frac{Q(\boldsymbol{X})}{P(\boldsymbol{X})} d \boldsymbol{X} \tag{4}</script>
+
+<p>Assuming that <script type="math/tex">Q</script> is an approximation of an unknown distribution <script type="math/tex">P</script>, the Kullback-Leibler divergence represents the average extra information (measured in bits) needed to transmit values of <script type="math/tex">\boldsymbol{X}</script> using <script type="math/tex">Q</script> as an encoding scheme instead of <script type="math/tex">P</script>:</p>
+
+<script type="math/tex; mode=display">\underbrace{H(P, Q)}_{\text{average information to encode X using Q instead of P}} -
+\underbrace{H(P)}_{\text{average information to encode X using P}} = \\
+\underbrace{- \int_{\boldsymbol{X} \in \mathcal{X}} P(\boldsymbol{X}) \log_2 Q(\boldsymbol{X}) d\boldsymbol{X}}_{\text{cross-entropy between P and Q}} - 
+\Big( \underbrace{- \int_{\boldsymbol{X} \in \mathcal{X}} P(\boldsymbol{X}) \log_2 P(\boldsymbol{X}) d\boldsymbol{X}}_{\text{entropy of P}} \Big) = \\
+- \int_{\boldsymbol{X} \in \mathcal{X}} P(\boldsymbol{X}) \log_2 \frac{Q(\boldsymbol{X})}{P(\boldsymbol{X})} d \boldsymbol{X} = \\
+KL(P \mid\mid Q) \tag{5}</script>
+
+<p>Intuitively, we expect the KL divergence to be non-negative, as, on average, more information is needed when using a different distribution <script type="math/tex">Q</script> to encode <script type="math/tex">\boldsymbol{X}</script> that is, in reality, distributed according to <script type="math/tex">P</script>. Using the probabilistic version of Jensen’s inequality, we can see that this is indeed true:</p>
+
+<script type="math/tex; mode=display">KL(P \mid\mid Q) = 
+- \int_{\boldsymbol{X} \in \mathcal{X}} P(\boldsymbol{X}) \log_2 \frac{Q(\boldsymbol{X})}{P(\boldsymbol{X})} d \boldsymbol{X} =
+- \mathbb{E}_{\boldsymbol{X} \sim P(\boldsymbol{X})} \Big[ \log_2 \frac{Q(\boldsymbol{X})}{P({\boldsymbol{X}})} \Big] 
+\overset{\text{Jensen}}{\geq}</script>
+
+<script type="math/tex; mode=display">- \log_2 \mathbb{E}_{\boldsymbol{X} \sim P(\boldsymbol{X})} \Big[ \frac{Q(\boldsymbol{X})}{P(\boldsymbol{X})} \Big] =
+- \log_2 \underbrace{\int_{\boldsymbol{X} \in \mathcal{X}} \require{cancel} \cancel{P(\boldsymbol{X})} \frac{Q(\boldsymbol{X})}{\cancel{P(\boldsymbol{X})}} d\boldsymbol{X}}_{\text{Q distribution} \implies \text{ integrates to 1}} = 0 
+\tag{6}</script>
+
+<p>Equality holds when the random variable under expected value in Jensen’s inequality is constant, so in this case, if <script type="math/tex">\log_2 \frac{Q(\boldsymbol{X})}{P({\boldsymbol{X}})} = \text{constant}</script>, which can only happen if <script type="math/tex">P = Q</script>. In the next section this inequality will be used for constructing the surrogate function in the EM algorithm.</p>
+
+<h3 id="em-algorithms">EM algorithms</h3>
+
+<p>&lt; to be continued &gt;</p>
+
+<h3 id="visual-example-gaussian-mixtures">Visual example: Gaussian mixtures</h3>
+
+<p>&lt; to be continued &gt;</p>
+
+<h3 id="credits">Credits</h3>
+
+<ol>
+  <li>Bishop, Christopher M. Neural networks for pattern recognition. Oxford university press, 1995.</li>
+  <li><a href="http://www.leg.ufpr.br/~paulojus/EM/Tutorial%20on%20MM.pdf">Hunter, D. R., &amp; Lange, K. (2004). A tutorial on MM algorithms. The American Statistician, 58(1), 30-37.</a></li>
+  <li>Coordinated Scheduling and Spectrum Sharing via Matrix Fractional Programming - Scientific Figure on ResearchGate. Available from <a href="https://www.researchgate.net/figure/The-iterative-optimization-by-the-MM-algorithm-Observe-that-f-x-is-monotonically_fig1_327110666">ResearchGate</a> [accessed 3 Mar, 2020]</li>
+</ol>
+
+      </article>
+
+      
+
+      
+        <!-- Check if any share-links are active -->
+
+
+
+
+<section id = "social-share-section">
+  <span class="sr-only">Share: </span>
+
+  
+  <!--- Share on Twitter -->
+    <a href="https://twitter.com/intent/tweet?text=Understanding+EM+as+an+MM+algorithm&url=http%3A%2F%2Flocalhost%3A4000%2F2020-02-26-em%2F"
+      class="btn btn-social-icon btn-twitter" title="Share on Twitter">
+      <span class="fa fa-fw fa-twitter" aria-hidden="true"></span>
+      <span class="sr-only">Twitter</span>
+    </a>
+  
+
+  
+  <!--- Share on Facebook -->
+    <a href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Flocalhost%3A4000%2F2020-02-26-em%2F"
+      class="btn btn-social-icon btn-facebook" title="Share on Facebook">
+      <span class="fa fa-fw fa-facebook" aria-hidden="true"></span>
+      <span class="sr-only">Facebook</span>
+    </a>
+  
+
+  
+  <!--- Share on LinkedIn -->
+    <a href="https://www.linkedin.com/shareArticle?mini=true&url=http%3A%2F%2Flocalhost%3A4000%2F2020-02-26-em%2F"
+      class="btn btn-social-icon btn-linkedin" title="Share on LinkedIn">
+      <span class="fa fa-fw fa-linkedin" aria-hidden="true"></span>
+      <span class="sr-only">LinkedIn</span>
+    </a>
+  
+
+</section>
+
+
+
+      
+
+      <ul class="pager blog-pager">
+        
+        <li class="previous">
+          <a href="/2020-02-26-generative-classification/" data-toggle="tooltip" data-placement="top" title="Generative methods for classification">&larr; Previous Post</a>
+        </li>
+        
+        
+      </ul>
+
+      
+        <div class="disqus-comments">
+          
+        </div>
+          
+        <div class="staticman-comments">
+          
+
+        </div>
+        <div class="justcomments-comments">
+          
+        </div>
+      
+    </div>
+  </div>
+</div>
+
+
+    <footer>
+  <div class="container beautiful-jekyll-footer">
+    <div class="row">
+      <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+        <ul class="list-inline text-center footer-links"><li><a href="mailto:andreea.a.musat@gmail.com" title="Email me"><span class="fa-stack fa-lg" aria-hidden="true">
+                  <i class="fa fa-circle fa-stack-2x"></i>
+                  <i class="fa fa-envelope fa-stack-1x fa-inverse"></i>
+                </span>
+                <span class="sr-only">Email me</span>
+              </a>
+            </li><li><a href="https://github.com/AndreeaMusat" title="GitHub"><span class="fa-stack fa-lg" aria-hidden="true">
+                  <i class="fa fa-circle fa-stack-2x"></i>
+                  <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                </span>
+                <span class="sr-only">GitHub</span>
+              </a>
+            </li><li><a href="https://linkedin.com/in/andreea-alexandra-muşat-74530111b" title="LinkedIn"><span class="fa-stack fa-lg" aria-hidden="true">
+                  <i class="fa fa-circle fa-stack-2x"></i>
+                  <i class="fa fa-linkedin fa-stack-1x fa-inverse"></i>
+                </span>
+                <span class="sr-only">LinkedIn</span>
+              </a>
+            </li></ul>
+      <p class="copyright text-muted">
+      Andreea Mușat
+      &nbsp;&bull;&nbsp;
+      2020
+
+      
+      &nbsp;&bull;&nbsp;
+      <a href="http://localhost:4000/">andreeamusat.github.io</a>
+      
+
+      
+      </p>
+          <!-- Please don't remove this, keep my open source work credited :) -->
+    <p class="theme-by text-muted">
+      Theme by
+      <a href="https://deanattali.com/beautiful-jekyll/">beautiful-jekyll</a>
+    </p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+  
+    
+
+
+  
+    <!-- doing something a bit funky here because I want to be careful not to include JQuery twice! -->
+    
+      <script>
+      	if (typeof jQuery == 'undefined') {
+          document.write('<script src="/js/jquery-1.11.2.min.js"></scr' + 'ipt>');
+      	}
+      </script>
+    
+  
+    <!-- doing something a bit funky here because I want to be careful not to include JQuery twice! -->
+    
+      <script src="/js/bootstrap.min.js"></script>
+    
+  
+    <!-- doing something a bit funky here because I want to be careful not to include JQuery twice! -->
+    
+      <script src="/js/main.js"></script>
+    
+  
+
+
+
+
+
+
+  
+  </body>
+</html>
