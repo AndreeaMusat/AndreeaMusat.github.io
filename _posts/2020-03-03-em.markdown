@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Understanding EM as an MM algorithm"
-date:   2020-02-27 00:14:48 +0200
+date:   2020-03-03 18:32:48 +0200
 categories: ml
 mathjax: true
 ---
@@ -89,6 +89,44 @@ $$
 Equality holds when the random variable under expected value in Jensen's inequality is constant, so in this case, if $$ \log_2 \frac{Q(\boldsymbol{X})}{P({\boldsymbol{X}})} = \text{constant} $$, which can only happen if $$ P = Q $$. In the next section this inequality will be used for constructing the surrogate function in the EM algorithm.
 
 ### EM algorithms
+
+Let's first see the EM algorithm, then understand how and why it fits into the MM framework.
+
+EM is used for determining the parameters $$ \boldsymbol{\theta} $$ of a probabilistic model when optimizing $$ p(\boldsymbol{X} \mid \boldsymbol{\theta}) $$ directly is not feasible, but optimizing the joint probability $$ p(\boldsymbol{X}, \boldsymbol{Z} \mid \boldsymbol{\theta}) $$ of the 'full data', consisting of the observed data $$ \boldsymbol{X} $$ and the latent variable $$ \boldsymbol{Z} $$ is easier. A distribution over the latent variable, $$ q(\boldsymbol{Z}) $$, is introduced. We assume that $$ Z $$ is a discrete random variables, otherwise the sums in the following derivations will be replaced by integrals. Then, the log likelihood of the model can be decomposed into two terms, as follows:
+
+$$
+\log p(\boldsymbol{X} \mid \boldsymbol{\theta}) = 
+\log p(\boldsymbol{X} \mid \boldsymbol{\theta}) \underbrace{\sum_{\boldsymbol{Z}} q(\boldsymbol{Z})}_{\text{q sums to 1}} = 
+\sum_{\boldsymbol{Z}} q(\boldsymbol{Z}) \log p(\boldsymbol{X} \mid \boldsymbol{\theta})
+\tag{7}
+$$
+
+Using the chain rule for $$ p(\boldsymbol{X}, \boldsymbol{Z} \mid \boldsymbol{\theta}) $$, we get:
+
+$$
+p(\boldsymbol{X}, \boldsymbol{Z} \mid \boldsymbol{\theta}) =
+p(\boldsymbol{X} \mid \boldsymbol{\theta}) p(\boldsymbol{Z} \mid \boldsymbol{X}, \boldsymbol{\theta}) \implies 
+p(\boldsymbol{X} \mid \boldsymbol{\theta}) = 
+\frac{p(\boldsymbol{X}, \boldsymbol{Z} \mid \boldsymbol{\theta})}{p(\boldsymbol{Z} \mid \boldsymbol{X}, \boldsymbol{\theta})}
+\tag{8}
+$$
+
+Replacing (8) back into (7), we get:
+
+$$
+\log p(\boldsymbol{X} \mid \boldsymbol{\theta}) = 
+\sum_{\boldsymbol{Z}} q(\boldsymbol{Z}) \log \frac{p(\boldsymbol{X}, \boldsymbol{Z} \mid \boldsymbol{\theta})}{p(\boldsymbol{Z} \mid \boldsymbol{X}, \boldsymbol{\theta})} =
+
+\sum_{\boldsymbol{Z}} q(\boldsymbol{Z}) \log 
+\Bigg( \frac{p(\boldsymbol{X}, \boldsymbol{Z} \mid \boldsymbol{\theta})}{q(\boldsymbol{Z})}
+	  \frac{q(\boldsymbol{Z})}{p(\boldsymbol{Z} \mid \boldsymbol{X}, \boldsymbol{\theta})} \Bigg) =
+$$
+
+$$
+\underbrace{\sum_{\boldsymbol{Z}} q(\boldsymbol{Z}) \log \frac{p(\boldsymbol{X}, \boldsymbol{Z} \mid \boldsymbol{\theta})}{q(\boldsymbol{Z})}}_{\mathcal{L}(q, \boldsymbol{\theta})} + \Bigg( 
+\underbrace{-\sum_{\boldsymbol{Z}} q(\boldsymbol{Z}) \log \frac{p(\boldsymbol{Z} \mid \boldsymbol{X}, \boldsymbol{\theta})}{q(\boldsymbol{Z})}}_{KL(q \mid\mid p)} \Bigg)
+$$
+
 
 < to be continued >
 

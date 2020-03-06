@@ -69,8 +69,8 @@
   <meta property="og:type" content="website" />
 
   
-  <meta property="og:url" content="http://localhost:4000/2020-02-26-em/" />
-  <link rel="canonical" href="http://localhost:4000/2020-02-26-em/" />
+  <meta property="og:url" content="http://localhost:4000/2020-03-03-em/" />
+  <link rel="canonical" href="http://localhost:4000/2020-03-03-em/" />
   
 
   
@@ -175,7 +175,7 @@
 		  
 		  
 		  
-		  <span class="post-meta">Posted on February 26, 2020</span>
+		  <span class="post-meta">Posted on March 3, 2020</span>
 		  
         </div>
       </div>
@@ -267,6 +267,35 @@ KL(P \mid\mid Q) \tag{5}</script>
 
 <h3 id="em-algorithms">EM algorithms</h3>
 
+<p>Let’s first see the EM algorithm, then understand how and why it fits into the MM framework.</p>
+
+<p>EM is used for determining the parameters <script type="math/tex">\boldsymbol{\theta}</script> of a probabilistic model when optimizing <script type="math/tex">p(\boldsymbol{X} \mid \boldsymbol{\theta})</script> directly is not feasible, but optimizing the joint probability <script type="math/tex">p(\boldsymbol{X}, \boldsymbol{Z} \mid \boldsymbol{\theta})</script> of the ‘full data’, consisting of the observed data <script type="math/tex">\boldsymbol{X}</script> and the latent variable <script type="math/tex">\boldsymbol{Z}</script> is easier. A distribution over the latent variable, <script type="math/tex">q(\boldsymbol{Z})</script>, is introduced. We assume that <script type="math/tex">Z</script> is a discrete random variables, otherwise the sums in the following derivations will be replaced by integrals. Then, the log likelihood of the model can be decomposed into two terms, as follows:</p>
+
+<script type="math/tex; mode=display">\log p(\boldsymbol{X} \mid \boldsymbol{\theta}) = 
+\log p(\boldsymbol{X} \mid \boldsymbol{\theta}) \underbrace{\sum_{\boldsymbol{Z}} q(\boldsymbol{Z})}_{\text{q sums to 1}} = 
+\sum_{\boldsymbol{Z}} q(\boldsymbol{Z}) \log p(\boldsymbol{X} \mid \boldsymbol{\theta})
+\tag{7}</script>
+
+<p>Using the chain rule for <script type="math/tex">p(\boldsymbol{X}, \boldsymbol{Z} \mid \boldsymbol{\theta})</script>, we get:</p>
+
+<script type="math/tex; mode=display">p(\boldsymbol{X}, \boldsymbol{Z} \mid \boldsymbol{\theta}) =
+p(\boldsymbol{X} \mid \boldsymbol{\theta}) p(\boldsymbol{Z} \mid \boldsymbol{X}, \boldsymbol{\theta}) \implies 
+p(\boldsymbol{X} \mid \boldsymbol{\theta}) = 
+\frac{p(\boldsymbol{X}, \boldsymbol{Z} \mid \boldsymbol{\theta})}{p(\boldsymbol{Z} \mid \boldsymbol{X}, \boldsymbol{\theta})}
+\tag{8}</script>
+
+<p>Replacing (8) back into (7), we get:</p>
+
+<script type="math/tex; mode=display">\log p(\boldsymbol{X} \mid \boldsymbol{\theta}) = 
+\sum_{\boldsymbol{Z}} q(\boldsymbol{Z}) \log \frac{p(\boldsymbol{X}, \boldsymbol{Z} \mid \boldsymbol{\theta})}{p(\boldsymbol{Z} \mid \boldsymbol{X}, \boldsymbol{\theta})} =
+
+\sum_{\boldsymbol{Z}} q(\boldsymbol{Z}) \log 
+\Bigg( \frac{p(\boldsymbol{X}, \boldsymbol{Z} \mid \boldsymbol{\theta})}{q(\boldsymbol{Z})}
+	  \frac{q(\boldsymbol{Z})}{p(\boldsymbol{Z} \mid \boldsymbol{X}, \boldsymbol{\theta})} \Bigg) =</script>
+
+<script type="math/tex; mode=display">\underbrace{\sum_{\boldsymbol{Z}} q(\boldsymbol{Z}) \log \frac{p(\boldsymbol{X}, \boldsymbol{Z} \mid \boldsymbol{\theta})}{q(\boldsymbol{Z})}}_{\mathcal{L}(q, \boldsymbol{\theta})} + \Bigg( 
+\underbrace{-\sum_{\boldsymbol{Z}} q(\boldsymbol{Z}) \log \frac{p(\boldsymbol{Z} \mid \boldsymbol{X}, \boldsymbol{\theta})}{q(\boldsymbol{Z})}}_{KL(q \mid\mid p)} \Bigg)</script>
+
 <p>&lt; to be continued &gt;</p>
 
 <h3 id="visual-example-gaussian-mixtures">Visual example: Gaussian mixtures</h3>
@@ -296,7 +325,7 @@ KL(P \mid\mid Q) \tag{5}</script>
 
   
   <!--- Share on Twitter -->
-    <a href="https://twitter.com/intent/tweet?text=Understanding+EM+as+an+MM+algorithm&url=http%3A%2F%2Flocalhost%3A4000%2F2020-02-26-em%2F"
+    <a href="https://twitter.com/intent/tweet?text=Understanding+EM+as+an+MM+algorithm&url=http%3A%2F%2Flocalhost%3A4000%2F2020-03-03-em%2F"
       class="btn btn-social-icon btn-twitter" title="Share on Twitter">
       <span class="fa fa-fw fa-twitter" aria-hidden="true"></span>
       <span class="sr-only">Twitter</span>
@@ -305,7 +334,7 @@ KL(P \mid\mid Q) \tag{5}</script>
 
   
   <!--- Share on Facebook -->
-    <a href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Flocalhost%3A4000%2F2020-02-26-em%2F"
+    <a href="https://www.facebook.com/sharer/sharer.php?u=http%3A%2F%2Flocalhost%3A4000%2F2020-03-03-em%2F"
       class="btn btn-social-icon btn-facebook" title="Share on Facebook">
       <span class="fa fa-fw fa-facebook" aria-hidden="true"></span>
       <span class="sr-only">Facebook</span>
@@ -314,7 +343,7 @@ KL(P \mid\mid Q) \tag{5}</script>
 
   
   <!--- Share on LinkedIn -->
-    <a href="https://www.linkedin.com/shareArticle?mini=true&url=http%3A%2F%2Flocalhost%3A4000%2F2020-02-26-em%2F"
+    <a href="https://www.linkedin.com/shareArticle?mini=true&url=http%3A%2F%2Flocalhost%3A4000%2F2020-03-03-em%2F"
       class="btn btn-social-icon btn-linkedin" title="Share on LinkedIn">
       <span class="fa fa-fw fa-linkedin" aria-hidden="true"></span>
       <span class="sr-only">LinkedIn</span>
