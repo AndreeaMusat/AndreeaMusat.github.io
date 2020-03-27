@@ -252,7 +252,7 @@ f(\boldsymbol{\theta^{(t)}}) \tag{3}</script>
 - \int_{\boldsymbol{X} \in \mathcal{X}} P(\boldsymbol{X}) \log_2 \frac{Q(\boldsymbol{X})}{P(\boldsymbol{X})} d \boldsymbol{X} = \\
 KL(P \mid\mid Q) \tag{5}</script>
 
-<p>Intuitively, we expect the KL divergence to be non-negative, as, on average, more information is needed when using a different distribution <script type="math/tex">Q</script> to encode <script type="math/tex">\boldsymbol{X}</script> that is, in reality, distributed according to <script type="math/tex">P</script>. Using the probabilistic version of Jensen’s inequality, we can see that this is indeed true:</p>
+<p>Intuitively, we expect the KL divergence to be non-negative, as, on average, more information is needed when using a different distribution <script type="math/tex">Q</script> to encode <script type="math/tex">\boldsymbol{X}</script> that is, in reality, distributed according to <script type="math/tex">P</script>. Using the probabilistic version of Jensen’s inequality and the fact that <script type="math/tex">\log</script> is a concave function, we can see that this is indeed true:</p>
 
 <script type="math/tex; mode=display">KL(P \mid\mid Q) = 
 - \int_{\boldsymbol{X} \in \mathcal{X}} P(\boldsymbol{X}) \log_2 \frac{Q(\boldsymbol{X})}{P(\boldsymbol{X})} d \boldsymbol{X} =
@@ -263,7 +263,7 @@ KL(P \mid\mid Q) \tag{5}</script>
 - \log_2 \underbrace{\int_{\boldsymbol{X} \in \mathcal{X}} \require{cancel} \cancel{P(\boldsymbol{X})} \frac{Q(\boldsymbol{X})}{\cancel{P(\boldsymbol{X})}} d\boldsymbol{X}}_{\text{Q distribution} \implies \text{ integrates to 1}} = 0 
 \tag{6}</script>
 
-<p>Equality holds when the random variable under expected value in Jensen’s inequality is constant, so in this case, if <script type="math/tex">\log_2 \frac{Q(\boldsymbol{X})}{P({\boldsymbol{X}})} = \text{constant}</script>, which can only happen if <script type="math/tex">P = Q</script>. In the next section this inequality will be used for constructing the surrogate function in the EM algorithm.</p>
+<p>Equality holds when the random variable under expected value in Jensen’s inequality is constant, so in this case, if <script type="math/tex">\log_2 \frac{Q(\boldsymbol{X})}{P({\boldsymbol{X}})} = \text{constant}</script>, which can only happen if <script type="math/tex">P = Q</script> (almost everywhere). In the next section this inequality will be used for constructing the surrogate function in the EM algorithm.</p>
 
 <h3 id="em-algorithms">EM algorithms</h3>
 
@@ -294,9 +294,51 @@ p(\boldsymbol{X} \mid \boldsymbol{\theta}) =
 	  \frac{q(\boldsymbol{Z})}{p(\boldsymbol{Z} \mid \boldsymbol{X}, \boldsymbol{\theta})} \Bigg) =</script>
 
 <script type="math/tex; mode=display">\underbrace{\sum_{\boldsymbol{Z}} q(\boldsymbol{Z}) \log \frac{p(\boldsymbol{X}, \boldsymbol{Z} \mid \boldsymbol{\theta})}{q(\boldsymbol{Z})}}_{\mathcal{L}(q, \boldsymbol{\theta})} + \Bigg( 
-\underbrace{-\sum_{\boldsymbol{Z}} q(\boldsymbol{Z}) \log \frac{p(\boldsymbol{Z} \mid \boldsymbol{X}, \boldsymbol{\theta})}{q(\boldsymbol{Z})}}_{KL(q \mid\mid p)} \Bigg)</script>
+\underbrace{-\sum_{\boldsymbol{Z}} q(\boldsymbol{Z}) \log \frac{p(\boldsymbol{Z} \mid \boldsymbol{X}, \boldsymbol{\theta})}{q(\boldsymbol{Z})}}_{KL(q \mid\mid p)} \Bigg)
+\tag{9}</script>
 
-<p>&lt; to be continued &gt;</p>
+<p>So we managed to write the log-likelihood as follows:</p>
+
+<script type="math/tex; mode=display">\log p(\boldsymbol{X} \mid \boldsymbol{\theta}) =  
+\underbrace{\mathcal{L}(q, \boldsymbol{\theta}) + KL(q \mid\mid p)}_{rhs}
+\tag{10}</script>
+
+<p>We can notice that the parameters of the right-hand side (<script type="math/tex">rhs</script>) of (10) are both <script type="math/tex">q</script> and <script type="math/tex">\boldsymbol{\theta}</script>, so if <script type="math/tex">q</script> would be fixed, then <script type="math/tex">rhs</script> would only depend on <script type="math/tex">\boldsymbol{\theta}</script>, the parameter we want to optimize. The next natural question is: <strong> is it possible to fix <script type="math/tex">q</script> such that <script type="math/tex">rhs</script> becomes a minorizer for the log-likelihood? </strong>
+The short answer is: yes!</p>
+
+<p>First, let’s remember from (6) that the Kullback-Leibler divergence is always non-negative. Using this in (10), we can see the following inequality:</p>
+
+<script type="math/tex; mode=display">\mathcal{L}(q, \boldsymbol{\theta}) = 
+\log p(\boldsymbol{X} \mid \boldsymbol{\theta}) - \underbrace{KL(q \mid\mid p)}_{\geq 0}
+\leq \log p(\boldsymbol{X} \mid \boldsymbol{\theta})
+\tag{11}</script>
+
+<p>So the value of <script type="math/tex">\mathcal{L}(q, \boldsymbol{\theta})</script> is always smaller than the value of the log-likelihood, which is a first step towards making <script type="math/tex">\mathcal{L}</script> a minorizer for the log-likelihood. This is condition (1) that a minorizer should respect.</p>
+
+<p>The next step would be to choose a <script type="math/tex">q</script> such that <script type="math/tex">\mathcal{L}(q, \boldsymbol{\theta}) = \log p(\boldsymbol{X} \mid \boldsymbol{\theta})</script> for the current estimate of <script type="math/tex">\boldsymbol{\theta}</script>. Looking again at (11), we can see that this is possible if the Kullback-Leibler divergence is exactly 0. We showed above that this can happen only if <script type="math/tex">p = q</script>. This is condition (2) that a minorizer should respect. With this in mind, we can now sketch our iterative algorithm for maximizing the log-likelihood:</p>
+
+<ul>
+  <li>1. Initialize the parameter to be optimized <script type="math/tex">\boldsymbol{\theta}_0</script> arbitrarily.</li>
+  <li>2. Repeat for <script type="math/tex">i = 0, 1, ...</script> (until convergence)
+    <ul>
+      <li>2.1. Evaluate q as the posterior distribution:</li>
+    </ul>
+
+    <script type="math/tex; mode=display">q(\boldsymbol{Z}) = p(\boldsymbol{Z} \mid \boldsymbol{X}, \boldsymbol{\theta_i})</script>
+
+    <p>In the EM framework, this represents the <strong> E step </strong>. This guarantees that <script type="math/tex">\mathcal{L}(q, \boldsymbol{\theta})</script> is a minorizer of the log-likelihood. (Note that the old parameter estimate <script type="math/tex">\boldsymbol{\theta_i}</script> only appears in <script type="math/tex">p</script>, but not explicitly in <script type="math/tex">\mathcal{L}</script>, which has <script type="math/tex">\boldsymbol{\theta}</script> as a free parameter)</p>
+
+    <ul>
+      <li>2.2. Maximize the minorizer <script type="math/tex">\mathcal{L}(q, \boldsymbol{\theta})</script> w.r.t <script type="math/tex">\boldsymbol{\theta}</script>, yielding a new parameter estimate:</li>
+    </ul>
+
+    <script type="math/tex; mode=display">\boldsymbol{\theta_{i + 1}} = 
+  \arg\max_{\boldsymbol{\theta}} \mathcal{L}(q, \boldsymbol{\theta}) \overset{(9)}{=}
+  \arg\max_{\boldsymbol{\theta}} \sum_{\boldsymbol{Z}} q(\boldsymbol{Z}) \log \frac{p(\boldsymbol{X}, \boldsymbol{Z} \mid \boldsymbol{\theta})}{q(\boldsymbol{Z})}</script>
+
+    <p>This is called the <strong> M step </strong> in the EM framework. Because this is the same step as in the MM algorithm, it is guaranteed that the new estimate will at least as good as the previous one.</p>
+  </li>
+</ul>
 
 <h3 id="visual-example-gaussian-mixtures">Visual example: Gaussian mixtures</h3>
 

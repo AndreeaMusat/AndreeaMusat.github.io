@@ -71,7 +71,7 @@ $$
 KL(P \mid\mid Q) \tag{5}
 $$
 
-Intuitively, we expect the KL divergence to be non-negative, as, on average, more information is needed when using a different distribution $$ Q $$ to encode $$ \boldsymbol{X} $$ that is, in reality, distributed according to $$ P $$. Using the probabilistic version of Jensen's inequality, we can see that this is indeed true:
+Intuitively, we expect the KL divergence to be non-negative, as, on average, more information is needed when using a different distribution $$ Q $$ to encode $$ \boldsymbol{X} $$ that is, in reality, distributed according to $$ P $$. Using the probabilistic version of Jensen's inequality and the fact that $$ \log $$ is a concave function, we can see that this is indeed true:
 
 $$
 KL(P \mid\mid Q) = 
@@ -86,7 +86,7 @@ $$
 \tag{6}
 $$
 
-Equality holds when the random variable under expected value in Jensen's inequality is constant, so in this case, if $$ \log_2 \frac{Q(\boldsymbol{X})}{P({\boldsymbol{X}})} = \text{constant} $$, which can only happen if $$ P = Q $$. In the next section this inequality will be used for constructing the surrogate function in the EM algorithm.
+Equality holds when the random variable under expected value in Jensen's inequality is constant, so in this case, if $$ \log_2 \frac{Q(\boldsymbol{X})}{P({\boldsymbol{X}})} = \text{constant} $$, which can only happen if $$ P = Q $$ (almost everywhere). In the next section this inequality will be used for constructing the surrogate function in the EM algorithm.
 
 ### EM algorithms
 
@@ -125,10 +125,55 @@ $$
 $$
 \underbrace{\sum_{\boldsymbol{Z}} q(\boldsymbol{Z}) \log \frac{p(\boldsymbol{X}, \boldsymbol{Z} \mid \boldsymbol{\theta})}{q(\boldsymbol{Z})}}_{\mathcal{L}(q, \boldsymbol{\theta})} + \Bigg( 
 \underbrace{-\sum_{\boldsymbol{Z}} q(\boldsymbol{Z}) \log \frac{p(\boldsymbol{Z} \mid \boldsymbol{X}, \boldsymbol{\theta})}{q(\boldsymbol{Z})}}_{KL(q \mid\mid p)} \Bigg)
+\tag{9}
 $$
 
+So we managed to write the log-likelihood as follows:
 
-< to be continued >
+$$
+\log p(\boldsymbol{X} \mid \boldsymbol{\theta}) =  
+\underbrace{\mathcal{L}(q, \boldsymbol{\theta}) + KL(q \mid\mid p)}_{rhs}
+\tag{10}
+$$
+
+We can notice that the parameters of the right-hand side ($$ rhs $$) of (10) are both $$ q $$ and $$ \boldsymbol{\theta} $$, so if $$ q $$ would be fixed, then $$ rhs $$ would only depend on $$ \boldsymbol{\theta} $$, the parameter we want to optimize. The next natural question is: <strong> is it possible to fix $$ q $$ such that $$ rhs $$ becomes a minorizer for the log-likelihood? </strong>
+The short answer is: yes! 
+
+First, let's remember from (6) that the Kullback-Leibler divergence is always non-negative. Using this in (10), we can see the following inequality: 
+
+$$
+\mathcal{L}(q, \boldsymbol{\theta}) = 
+\log p(\boldsymbol{X} \mid \boldsymbol{\theta}) - \underbrace{KL(q \mid\mid p)}_{\geq 0}
+\leq \log p(\boldsymbol{X} \mid \boldsymbol{\theta})
+\tag{11}
+$$
+
+So the value of $$ \mathcal{L}(q, \boldsymbol{\theta}) $$ is always smaller than the value of the log-likelihood, which is a first step towards making $$ \mathcal{L} $$ a minorizer for the log-likelihood. This is condition (1) that a minorizer should respect. 
+
+The next step would be to choose a $$ q $$ such that $$ \mathcal{L}(q, \boldsymbol{\theta}) = \log p(\boldsymbol{X} \mid \boldsymbol{\theta}) $$ for the current estimate of $$ \boldsymbol{\theta} $$. Looking again at (11), we can see that this is possible if the Kullback-Leibler divergence is exactly 0. We showed above that this can happen only if $$ p = q $$. This is condition (2) that a minorizer should respect. With this in mind, we can now sketch our iterative algorithm for maximizing the log-likelihood: 
+
+* 1\. Initialize the parameter to be optimized $$ \boldsymbol{\theta}_0 $$ arbitrarily.
+* 2\. Repeat for $$ i = 0, 1, ... $$ (until convergence)
+	* 2.1\. Evaluate q as the posterior distribution:
+
+	$$ q(\boldsymbol{Z}) = p(\boldsymbol{Z} \mid \boldsymbol{X}, \boldsymbol{\theta_i}) $$
+
+	In the EM framework, this represents the <strong> E step </strong>. This guarantees that $$ \mathcal{L}(q, \boldsymbol{\theta}) $$ is a minorizer of the log-likelihood. (Note that the old parameter estimate $$ \boldsymbol{\theta_i} $$ only appears in $$ p $$, but not explicitly in $$ \mathcal{L} $$, which has $$ \boldsymbol{\theta} $$ as a free parameter)
+
+    * 2.2\. Maximize the minorizer $$ \mathcal{L}(q, \boldsymbol{\theta}) $$ w.r.t $$ \boldsymbol{\theta} $$, yielding a new parameter estimate:
+
+    $$ 
+    \boldsymbol{\theta_{i + 1}} = 
+    \arg\max_{\boldsymbol{\theta}} \mathcal{L}(q, \boldsymbol{\theta}) \overset{(9)}{=}
+    \arg\max_{\boldsymbol{\theta}} \sum_{\boldsymbol{Z}} q(\boldsymbol{Z}) \log \frac{p(\boldsymbol{X}, \boldsymbol{Z} \mid \boldsymbol{\theta})}{q(\boldsymbol{Z})} 
+    $$
+
+    This is called the <strong> M step </strong> in the EM framework. Because this is the same step as in the MM algorithm, it is guaranteed that the new estimate will at least as good as the previous one. 
+
+
+	
+
+
 
 ### Visual example: Gaussian mixtures
 
