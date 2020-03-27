@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Understanding EM as an MM algorithm"
-date:   2020-03-03 18:32:48 +0200
+date:   2020-03-27 18:32:48 +0200
 categories: ml
 mathjax: true
 ---
@@ -170,14 +170,6 @@ The next step would be to choose a $$ q $$ such that $$ \mathcal{L}(q, \boldsymb
 
     This is called the <strong> M step </strong> in the EM framework. Because this is the same step as in the MM algorithm, it is guaranteed that the new estimate will at least as good as the previous one. 
 
-
-	
-
-
-
-### Visual example: Gaussian mixtures
-
-< to be continued >
 
 ### Credits
 
